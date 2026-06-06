@@ -7,7 +7,7 @@ import '../../config/theme.dart';
 import '../../models/gif_info.dart';
 import '../widgets/video_card.dart';
 // import '../widgets/sidebar.dart';
-import '../niches/niches_screen.dart';
+import '../explore/explore_screen.dart';
 import '../library/library_screen.dart';
 import '../ai/ai_screen.dart';
 import '../widgets/bulk_action_bar.dart';
@@ -234,8 +234,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     Widget activeBody;
     if (_currentBottomNavIndex == 1) {
-      // activeBody = const NichesScreen();
-      activeBody = const SafeArea(child: NichesScreen());
+      // activeBody = const ExploreScreen();
+      activeBody = const SafeArea(child: ExploreScreen());
     } else if (_currentBottomNavIndex == 2) {
       activeBody = const LibraryScreen();
     } else if (_currentBottomNavIndex == 3) {
@@ -330,7 +330,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
                         _buildNavItem(0, Icons.home_outlined, Icons.home, 'Home'),
-                        _buildNavItem(1, Icons.explore_outlined, Icons.explore, 'Niches'),
+                        _buildNavItem(1, Icons.explore_outlined, Icons.explore, 'Explore'),
                         _buildNavItem(2, Icons.bookmark_outline, Icons.bookmark, 'Library'),
                         _buildNavItem(3, Icons.psychology_outlined, Icons.psychology, 'AI Gen'),
                         _buildNavItem(4, Icons.person_outline, Icons.person, 'Me'),

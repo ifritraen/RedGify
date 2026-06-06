@@ -61,6 +61,14 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
     }
   }
 
+  bool get _isImg {
+    final mediaUrl = widget.gif.urls.hd.isNotEmpty ? widget.gif.urls.hd : widget.gif.urls.sd;
+    return mediaUrl.toLowerCase().endsWith('.jpg') ||
+        mediaUrl.toLowerCase().endsWith('.jpeg') ||
+        mediaUrl.toLowerCase().endsWith('.png') ||
+        widget.gif.duration == 0.0;
+  }
+
   void _addToHistory() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -70,6 +78,12 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
   }
 
   void _initializePlayer() {
+    if (_isImg) {
+      setState(() {
+        _initialized = true;
+      });
+      return;
+    }
     final mediaUrl = widget.gif.urls.hd.isNotEmpty ? widget.gif.urls.hd : widget.gif.urls.sd;
     _controller = VideoPlayerController.networkUrl(Uri.parse(mediaUrl))
       ..initialize().then((_) {
@@ -106,7 +120,7 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
     if (widget.isActive != oldWidget.isActive) {
       if (widget.isActive) {
         _addToHistory();
-        if (_controller != null && _initialized) {
+        if (!_isImg && _controller != null && _initialized) {
           _controller!.play();
           setState(() {
             _isPlaying = true;
@@ -114,7 +128,7 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
         }
       } else {
         _stopLongPressActions();
-        if (_controller != null && _initialized) {
+        if (!_isImg && _controller != null && _initialized) {
           _controller!.pause();
           setState(() {
             _isPlaying = false;
@@ -135,6 +149,7 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
   }
 
   void _togglePlayPause() {
+    if (_isImg) return;
     if (_controller == null || !_initialized) return;
     setState(() {
       if (_controller!.value.isPlaying) {
@@ -287,7 +302,22 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
         alignment: Alignment.center,
         children: [
           // 1. Fullscreen Video Player with gestured center overlays
-          if (_controller != null && _initialized)
+          if (_isImg)
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: _toggleHud,
+              onDoubleTap: _togglePlayPause,
+              child: Center(
+                child: Image.network(
+                  widget.gif.urls.hd.isNotEmpty ? widget.gif.urls.hd : widget.gif.urls.sd,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => const Center(
+                    child: Icon(Icons.broken_image, color: Colors.white30, size: 64),
+                  ),
+                ),
+              ),
+            )
+          else if (_controller != null && _initialized)
             GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: _toggleHud,
@@ -535,7 +565,7 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
             ),
 
           // 7. Bottom scrubbable Seekbar
-          if (_showHud)
+          if (_showHud && !_isImg)
             Positioned(
               bottom: 8,
               left: 12,

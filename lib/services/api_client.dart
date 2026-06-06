@@ -142,8 +142,10 @@ class ApiClient {
     final response = await get(url);
 
     if (response.statusCode == 200) {
-      await _isarService.writeCache(cacheKey, response.body);
-      return jsonDecode(response.body) as List<dynamic>;
+      final Map<String, dynamic> data = jsonDecode(response.body) as Map<String, dynamic>;
+      final List<dynamic> tagsList = data['tags'] as List<dynamic>? ?? [];
+      await _isarService.writeCache(cacheKey, jsonEncode(tagsList));
+      return tagsList;
     } else {
       throw Exception('Failed to load trending tags: ${response.statusCode}');
     }
@@ -189,6 +191,67 @@ class ApiClient {
       return jsonDecode(response.body) as Map<String, dynamic>;
     } else {
       throw Exception('Failed to load user content: ${response.statusCode}');
+    }
+  }
+
+  // Fetch explore feed (GIFs or Images)
+  Future<Map<String, dynamic>> getExploreFeed({
+    required String type, // 'g' for gifs, 'i' for images
+    int limit = 20,
+    int page = 1,
+    String order = 'trending',
+    String? time,
+    bool bypassCache = false,
+  }) async {
+    final cacheKey = 'explore_${type}_${order}_${time ?? "all"}_page_${page}_limit_${limit}';
+    if (!bypassCache) {
+      final cached = await _isarService.readCache(cacheKey, maxAge: const Duration(minutes: 10));
+      if (cached != null) {
+        return jsonDecode(cached) as Map<String, dynamic>;
+      }
+    }
+
+    var url = '${ApiConstants.searchEndpoint}?type=$type&order=$order&count=$limit&page=$page&verified=y';
+    if (time != null) {
+      url += '&time=$time';
+    }
+
+    final response = await get(url);
+    if (response.statusCode == 200) {
+      await _isarService.writeCache(cacheKey, response.body);
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw Exception('Failed to load explore feed: ${response.statusCode}');
+    }
+  }
+
+  // Fetch creator search results
+  Future<Map<String, dynamic>> searchCreators({
+    int limit = 20,
+    int page = 1,
+    String order = 'trending',
+    String? time,
+    bool bypassCache = false,
+  }) async {
+    final cacheKey = 'creators_${order}_${time ?? "all"}_page_${page}_limit_${limit}';
+    if (!bypassCache) {
+      final cached = await _isarService.readCache(cacheKey, maxAge: const Duration(minutes: 10));
+      if (cached != null) {
+        return jsonDecode(cached) as Map<String, dynamic>;
+      }
+    }
+
+    var url = '${ApiConstants.baseUrl}/creators/search?order=$order&count=$limit&page=$page&verified=y';
+    if (time != null) {
+      url += '&time=$time';
+    }
+
+    final response = await get(url);
+    if (response.statusCode == 200) {
+      await _isarService.writeCache(cacheKey, response.body);
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw Exception('Failed to search creators: ${response.statusCode}');
     }
   }
 }

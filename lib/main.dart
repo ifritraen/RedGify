@@ -7,6 +7,7 @@ import 'providers/library_provider.dart';
 import 'providers/ai_provider.dart';
 import 'providers/creator_profile_provider.dart';
 import 'providers/selection_provider.dart';
+import 'providers/explore_provider.dart';
 import 'config/theme.dart';
 import 'views/home/home_screen.dart';
 
@@ -21,6 +22,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => AIProvider()),
         ChangeNotifierProvider(create: (_) => CreatorProfileProvider()),
         ChangeNotifierProvider(create: (_) => SelectionProvider()),
+        ChangeNotifierProvider(create: (_) => ExploreProvider()),
       ],
       child: const MyApp(),
     ),
