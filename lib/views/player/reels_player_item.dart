@@ -361,76 +361,95 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
           if (_showHud)
             Positioned(
               bottom: 45,
-              left: 16,
+              left: 12,
               right: 80,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      if (_controller != null) _controller!.pause();
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => CreatorProfileScreen(username: widget.gif.userName),
-                        ),
-                      );
-                    },
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '@${widget.gif.userName}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            shadows: [Shadow(color: Colors.black, blurRadius: 4)],
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        if (widget.gif.verified)
-                          const Icon(Icons.verified, size: 14, color: AppTheme.accentNeon),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  // Tags
-                  if (widget.gif.tags.isNotEmpty)
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 4,
-                      children: widget.gif.tags.take(3).map((tag) {
-                        return GestureDetector(
-                          onTap: () {
-                            if (_controller != null) _controller!.pause();
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ChangeNotifierProvider(
-                                  create: (_) => SearchProvider()..performSearch(tag),
-                                  child: TagResultsScreen(tag: tag),
-                                ),
-                              ),
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withAlpha(30),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.white.withAlpha(30)),
-                            ),
-                            child: Text(
-                              '#$tag',
-                              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w500),
-                            ),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.black.withAlpha(130),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.white.withAlpha(25)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(100),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    )
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        if (_controller != null) _controller!.pause();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CreatorProfileScreen(username: widget.gif.userName),
                           ),
                         );
-                      }).toList(),
+                      },
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '@${widget.gif.userName}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              shadows: [Shadow(color: Colors.black, blurRadius: 4)],
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          if (widget.gif.verified)
+                            const Icon(Icons.verified, size: 14, color: AppTheme.accentNeon),
+                        ],
+                      ),
                     ),
-                ],
+                    const SizedBox(height: 6),
+                    // Tags
+                    if (widget.gif.tags.isNotEmpty)
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: widget.gif.tags.take(3).map((tag) {
+                          return GestureDetector(
+                            onTap: () {
+                              if (_controller != null) _controller!.pause();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ChangeNotifierProvider(
+                                    create: (_) => SearchProvider()..performSearch(tag),
+                                    child: TagResultsScreen(tag: tag),
+                                  ),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withAlpha(20),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.white.withAlpha(25)),
+                              ),
+                              child: Text(
+                                '#$tag',
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                  ],
+                ),
               ),
             ),
 
