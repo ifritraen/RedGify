@@ -8,6 +8,8 @@ import '../widgets/sidebar.dart';
 import '../niches/niches_screen.dart';
 import '../library/library_screen.dart';
 import '../ai/ai_screen.dart';
+import '../widgets/bulk_action_bar.dart';
+import '../../providers/selection_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -261,10 +263,16 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       drawer: const SidebarDrawer(),
-      body: activeBody,
+      body: Stack(
+        children: [
+          activeBody,
+          const BulkActionBar(),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentBottomNavIndex,
         onTap: (index) {
+          Provider.of<SelectionProvider>(context, listen: false).exitSelectionMode();
           setState(() {
             _currentBottomNavIndex = index;
           });

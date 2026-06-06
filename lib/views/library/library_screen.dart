@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/library_provider.dart';
 import '../../config/theme.dart';
 import '../widgets/video_card.dart';
+import '../widgets/bulk_action_bar.dart';
 
 class LibraryScreen extends StatefulWidget {
   const LibraryScreen({super.key});
@@ -283,26 +284,31 @@ class PlaylistDetailScreen extends StatelessWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: playlist.items.isEmpty
-          ? Center(
-              child: Text(
-                'This playlist is empty.',
-                style: TextStyle(color: Colors.white.withAlpha(100)),
-              ),
-            )
-          : GridView.builder(
-              padding: const EdgeInsets.all(16),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 0,
-                childAspectRatio: 0.70,
-              ),
-              itemCount: playlist.items.length,
-              itemBuilder: (context, index) {
-                return VideoCard(gif: playlist.items[index]);
-              },
-            ),
+      body: Stack(
+        children: [
+          playlist.items.isEmpty
+              ? Center(
+                  child: Text(
+                    'This playlist is empty.',
+                    style: TextStyle(color: Colors.white.withAlpha(100)),
+                  ),
+                )
+              : GridView.builder(
+                  padding: const EdgeInsets.all(16),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 0,
+                    childAspectRatio: 0.70,
+                  ),
+                  itemCount: playlist.items.length,
+                  itemBuilder: (context, index) {
+                    return VideoCard(gif: playlist.items[index]);
+                  },
+                ),
+          const BulkActionBar(),
+        ],
+      ),
     );
   }
 }
