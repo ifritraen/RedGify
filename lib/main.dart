@@ -4,6 +4,7 @@ import 'providers/feed_provider.dart';
 import 'providers/search_provider.dart';
 import 'providers/niches_provider.dart';
 import 'providers/library_provider.dart';
+import 'providers/ai_provider.dart';
 import 'config/theme.dart';
 import 'views/home/home_screen.dart';
 
@@ -15,6 +16,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => SearchProvider()),
         ChangeNotifierProvider(create: (_) => NichesProvider()),
         ChangeNotifierProvider(create: (_) => LibraryProvider()),
+        ChangeNotifierProvider(create: (_) => AIProvider()),
       ],
       child: const MyApp(),
     ),

@@ -7,6 +7,7 @@ import '../widgets/video_card.dart';
 import '../widgets/sidebar.dart';
 import '../niches/niches_screen.dart';
 import '../library/library_screen.dart';
+import '../ai/ai_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -227,6 +228,8 @@ class _HomeScreenState extends State<HomeScreen> {
     } else if (_currentBottomNavIndex == 2) {
       activeBody = const LibraryScreen();
     } else if (_currentBottomNavIndex == 3) {
+      activeBody = const AIScreen();
+    } else if (_currentBottomNavIndex == 4) {
       activeBody = Center(child: Text('Me Profile (Coming soon)', style: TextStyle(color: Colors.white.withAlpha(191))));
     } else {
       activeBody = _buildHomeFeedBody(feed, search);
@@ -286,6 +289,11 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.bookmark_outline),
             activeIcon: Icon(Icons.bookmark),
             label: 'Library',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.psychology_outlined),
+            activeIcon: Icon(Icons.psychology),
+            label: 'AI Gen',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
