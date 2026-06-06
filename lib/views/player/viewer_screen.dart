@@ -5,8 +5,10 @@ import '../../config/theme.dart';
 
 import 'package:provider/provider.dart';
 import '../../providers/library_provider.dart';
+import '../../providers/search_provider.dart';
 import '../widgets/playlist_selector_sheet.dart';
 import '../creator/creator_profile_screen.dart';
+import 'tag_results_screen.dart';
 
 class ViewerScreen extends StatefulWidget {
   final GifInfo gif;
@@ -147,15 +149,28 @@ class _ViewerScreenState extends State<ViewerScreen> {
                     spacing: 6,
                     runSpacing: 4,
                     children: widget.gif.tags.take(3).map((tag) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.white24,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          tag,
-                          style: const TextStyle(color: Colors.white, fontSize: 10),
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ChangeNotifierProvider(
+                                create: (_) => SearchProvider()..performSearch(tag),
+                                child: TagResultsScreen(tag: tag),
+                              ),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white24,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            tag,
+                            style: const TextStyle(color: Colors.white, fontSize: 10),
+                          ),
                         ),
                       );
                     }).toList(),

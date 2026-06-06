@@ -12,6 +12,7 @@ class NichesProvider with ChangeNotifier {
 
   // Selected niche feed state
   String? _selectedNicheId;
+  String _activeOrder = 'trending';
   final List<GifInfo> _nicheGifs = [];
   bool _isLoadingGifs = false;
   int _currentGifsPage = 1;
@@ -23,10 +24,25 @@ class NichesProvider with ChangeNotifier {
   String? get nichesError => _nichesError;
 
   String? get selectedNicheId => _selectedNicheId;
+  String get activeOrder => _activeOrder;
   List<GifInfo> get nicheGifs => _nicheGifs;
   bool get isLoadingGifs => _isLoadingGifs;
   bool get hasMoreGifs => _hasMoreGifs;
   String? get gifsError => _gifsError;
+
+  // Set sorting order
+  void setOrder(String order) {
+    if (_activeOrder == order) return;
+    _activeOrder = order;
+    if (_selectedNicheId != null) {
+      _nicheGifs.clear();
+      _currentGifsPage = 1;
+      _hasMoreGifs = true;
+      _gifsError = null;
+      notifyListeners();
+      fetchNextNicheGifsPage();
+    }
+  }
 
   // Fetch list of niches
   Future<void> fetchNichesList() async {
@@ -68,7 +84,11 @@ class NichesProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final data = await _apiClient.getNicheGifs(_selectedNicheId!, page: _currentGifsPage);
+      final data = await _apiClient.getNicheGifs(
+        _selectedNicheId!,
+        page: _currentGifsPage,
+        order: _activeOrder,
+      );
       final rawGifs = data['gifs'] as List? ?? [];
       final newGifs = rawGifs.map((g) => GifInfo.fromJson(g)).toList();
 

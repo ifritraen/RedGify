@@ -71,8 +71,8 @@ class ApiClient {
   }
 
   // Fetch Gifs for a specific niche
-  Future<Map<String, dynamic>> getNicheGifs(String nicheId, {int limit = 20, int page = 1}) async {
-    final url = '${ApiConstants.nichesEndpoint}/$nicheId/gifs?limit=$limit&page=$page';
+  Future<Map<String, dynamic>> getNicheGifs(String nicheId, {int limit = 20, int page = 1, String order = 'trending'}) async {
+    final url = '${ApiConstants.nichesEndpoint}/$nicheId/gifs?limit=$limit&page=$page&order=$order';
     final response = await get(url);
 
     if (response.statusCode == 200) {

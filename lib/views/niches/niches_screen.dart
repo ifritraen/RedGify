@@ -103,6 +103,23 @@ class _NichesScreenState extends State<NichesScreen> {
               ),
             ),
 
+          // Sorting Tabs selector for Niches
+          Container(
+            height: 36,
+            margin: const EdgeInsets.only(bottom: 8),
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              children: [
+                _buildSortChip(provider, 'trending', '🔥 Trending'),
+                const SizedBox(width: 8),
+                _buildSortChip(provider, 'new', '⚡ Newest'),
+                const SizedBox(width: 8),
+                _buildSortChip(provider, 'views', '👁️ Views'),
+              ],
+            ),
+          ),
+
           // Selected Niche Infinite Feed Grid
           Expanded(
             child: RefreshIndicator(
@@ -166,6 +183,34 @@ class _NichesScreenState extends State<NichesScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSortChip(NichesProvider provider, String orderValue, String label) {
+    final isSelected = provider.activeOrder == orderValue;
+    return ChoiceChip(
+      label: Text(
+        label,
+        style: TextStyle(
+          color: isSelected ? Colors.white : AppTheme.textSecondary,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          fontSize: 12,
+        ),
+      ),
+      selected: isSelected,
+      selectedColor: AppTheme.primaryNeon,
+      backgroundColor: AppTheme.cardBg,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(
+          color: isSelected ? AppTheme.primaryNeon : Colors.white.withAlpha(15),
+        ),
+      ),
+      onSelected: (selected) {
+        if (selected) {
+          provider.setOrder(orderValue);
+        }
+      },
     );
   }
 }
