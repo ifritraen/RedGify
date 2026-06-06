@@ -42,7 +42,7 @@ class _BulkActionBarState extends State<BulkActionBar> {
       }
     }
 
-    if (mounted) {
+    if (context.mounted) {
       setState(() {
         _isDownloading = false;
         _downloadStatus = '';
@@ -216,13 +216,15 @@ class _BulkActionBarState extends State<BulkActionBar> {
       right: 16,
       child: Material(
         elevation: 10,
-        color: AppTheme.background.withOpacity(0.95),
+        // color: AppTheme.background.withOpacity(0.95),
+        color: AppTheme.background.withAlpha(242),
         borderRadius: BorderRadius.circular(30),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(30),
-            border: Border.all(color: AppTheme.primaryNeon.withOpacity(0.3)),
+            // border: Border.all(color: AppTheme.primaryNeon.withOpacity(0.3)),
+            border: Border.all(color: AppTheme.primaryNeon.withAlpha(76)),
           ),
           child: _isDownloading
               ? Row(

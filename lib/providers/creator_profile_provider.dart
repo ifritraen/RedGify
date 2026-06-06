@@ -41,7 +41,8 @@ class CreatorProfileProvider with ChangeNotifier {
     try {
       if (bypassCache) {
         await IsarService().clearCachePrefix('user_gifs_${username}_page_');
-        await IsarService().clearCachePrefix('user_profile_${username}');
+        // await IsarService().clearCachePrefix('user_profile_${username}');
+        await IsarService().clearCachePrefix('user_profile_$username');
       }
 
       final data = await _apiClient.getUserProfile(username, bypassCache: bypassCache);

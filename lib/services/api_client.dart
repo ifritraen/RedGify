@@ -38,7 +38,8 @@ class ApiClient {
 
   // Fetch search results (cache for short periods e.g. 5 minutes)
   Future<Map<String, dynamic>> searchGifs(String query, {int limit = 20, int page = 1, bool bypassCache = false}) async {
-    final cacheKey = 'search_${query}_page_${page}_limit_${limit}';
+    // final cacheKey = 'search_${query}_page_${page}_limit_${limit}';
+    final cacheKey = 'search_${query}_page_${page}_limit_$limit';
     if (!bypassCache) {
       final cached = await _isarService.readCache(cacheKey, maxAge: const Duration(minutes: 5));
       if (cached != null) {
@@ -60,7 +61,8 @@ class ApiClient {
 
   // Fetch trending/popular/recent GIFs feed
   Future<Map<String, dynamic>> getTrendingFeed({int limit = 20, int page = 1, String order = 'trending', bool bypassCache = false}) async {
-    final cacheKey = 'feed_${order}_page_${page}_limit_${limit}';
+    // final cacheKey = 'feed_${order}_page_${page}_limit_${limit}';
+    final cacheKey = 'feed_${order}_page_${page}_limit_$limit';
     if (!bypassCache) {
       final cached = await _isarService.readCache(cacheKey, maxAge: const Duration(minutes: 10));
       if (cached != null) {
@@ -108,7 +110,8 @@ class ApiClient {
 
   // Fetch Gifs for a specific niche
   Future<Map<String, dynamic>> getNicheGifs(String nicheId, {int limit = 20, int page = 1, String order = 'trending', bool bypassCache = false}) async {
-    final cacheKey = 'niche_${nicheId}_${order}_page_${page}_limit_${limit}';
+    // final cacheKey = 'niche_${nicheId}_${order}_page_${page}_limit_${limit}';
+    final cacheKey = 'niche_${nicheId}_${order}_page_${page}_limit_$limit';
     if (!bypassCache) {
       final cached = await _isarService.readCache(cacheKey, maxAge: const Duration(minutes: 10));
       if (cached != null) {
@@ -153,7 +156,8 @@ class ApiClient {
 
   // Fetch user profile metadata
   Future<Map<String, dynamic>> getUserProfile(String username, {bool bypassCache = false}) async {
-    final cacheKey = 'user_profile_${username}';
+    // final cacheKey = 'user_profile_${username}';
+    final cacheKey = 'user_profile_$username';
     if (!bypassCache) {
       final cached = await _isarService.readCache(cacheKey, maxAge: const Duration(hours: 4));
       if (cached != null) {
@@ -174,7 +178,8 @@ class ApiClient {
 
   // Fetch GIFs uploaded by a specific user (creator feed)
   Future<Map<String, dynamic>> getUserGifs(String username, {int limit = 20, int page = 1, bool bypassCache = false}) async {
-    final cacheKey = 'user_gifs_${username}_page_${page}_limit_${limit}';
+    // final cacheKey = 'user_gifs_${username}_page_${page}_limit_${limit}';
+    final cacheKey = 'user_gifs_${username}_page_${page}_limit_$limit';
     if (!bypassCache) {
       final cached = await _isarService.readCache(cacheKey, maxAge: const Duration(minutes: 10));
       if (cached != null) {
@@ -203,7 +208,8 @@ class ApiClient {
     String? time,
     bool bypassCache = false,
   }) async {
-    final cacheKey = 'explore_${type}_${order}_${time ?? "all"}_page_${page}_limit_${limit}';
+    // final cacheKey = 'explore_${type}_${order}_${time ?? "all"}_page_${page}_limit_${limit}';
+    final cacheKey = 'explore_${type}_${order}_${time ?? "all"}_page_${page}_limit_$limit';
     if (!bypassCache) {
       final cached = await _isarService.readCache(cacheKey, maxAge: const Duration(minutes: 10));
       if (cached != null) {
@@ -233,7 +239,8 @@ class ApiClient {
     String? time,
     bool bypassCache = false,
   }) async {
-    final cacheKey = 'creators_${order}_${time ?? "all"}_page_${page}_limit_${limit}';
+    // final cacheKey = 'creators_${order}_${time ?? "all"}_page_${page}_limit_${limit}';
+    final cacheKey = 'creators_${order}_${time ?? "all"}_page_${page}_limit_$limit';
     if (!bypassCache) {
       final cached = await _isarService.readCache(cacheKey, maxAge: const Duration(minutes: 10));
       if (cached != null) {

@@ -29,7 +29,7 @@ class ReelsPlayerItem extends StatefulWidget {
 class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
   VideoPlayerController? _controller;
   bool _initialized = false;
-  bool _isPlaying = false;
+  // bool _isPlaying = false;
   // bool _showHud = true;
   bool _showHud = false;
   bool _isDownloading = false;
@@ -98,7 +98,7 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
         if (widget.isActive) {
           _controller!.play();
           setState(() {
-            _isPlaying = true;
+          // _isPlaying = true;
           });
         }
       });
@@ -123,7 +123,7 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
         if (!_isImg && _controller != null && _initialized) {
           _controller!.play();
           setState(() {
-            _isPlaying = true;
+            // _isPlaying = true;
           });
         }
       } else {
@@ -131,7 +131,7 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
         if (!_isImg && _controller != null && _initialized) {
           _controller!.pause();
           setState(() {
-            _isPlaying = false;
+            // _isPlaying = false;
           });
         }
       }
@@ -154,11 +154,11 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
     setState(() {
       if (_controller!.value.isPlaying) {
         _controller!.pause();
-        _isPlaying = false;
+        // _isPlaying = false;
         _playPauseOverlayIcon = Icons.pause;
       } else {
         _controller!.play();
-        _isPlaying = true;
+        // _isPlaying = true;
         _playPauseOverlayIcon = Icons.play_arrow;
       }
       _showPlayPauseOverlay = true;
