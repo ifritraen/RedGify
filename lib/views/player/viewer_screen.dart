@@ -9,6 +9,7 @@ import '../../providers/search_provider.dart';
 import '../widgets/playlist_selector_sheet.dart';
 import '../creator/creator_profile_screen.dart';
 import 'tag_results_screen.dart';
+import '../../services/download_service.dart';
 
 class ViewerScreen extends StatefulWidget {
   final GifInfo gif;
@@ -23,6 +24,53 @@ class _ViewerScreenState extends State<ViewerScreen> {
   late VideoPlayerController _controller;
   bool _initialized = false;
   bool _isPlaying = true;
+  bool _isDownloading = false;
+  double _downloadProgress = 0.0;
+
+  Future<void> _startDownload() async {
+    if (_isDownloading) return;
+    setState(() {
+      _isDownloading = true;
+      _downloadProgress = 0.0;
+    });
+
+    try {
+      final downloadUrl = widget.gif.urls.hd.isNotEmpty ? widget.gif.urls.hd : widget.gif.urls.sd;
+      final path = await DownloadService().downloadVideo(
+        downloadUrl,
+        widget.gif.id,
+        onProgress: (p) {
+          setState(() {
+            _downloadProgress = p;
+          });
+        },
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Downloaded successfully to: $path'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to download: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isDownloading = false;
+        });
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -211,6 +259,37 @@ class _ViewerScreenState extends State<ViewerScreen> {
                   icon: Icons.remove_red_eye,
                   label: '${widget.gif.views}',
                   color: Colors.white70,
+                ),
+                const SizedBox(height: 20),
+                GestureDetector(
+                  onTap: _startDownload,
+                  child: _isDownloading
+                      ? Column(
+                          children: [
+                            SizedBox(
+                              width: 32,
+                              height: 32,
+                              child: CircularProgressIndicator(
+                                value: _downloadProgress > 0 ? _downloadProgress : null,
+                                strokeWidth: 3,
+                                color: AppTheme.primaryNeon,
+                                backgroundColor: Colors.white24,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _downloadProgress > 0
+                                  ? '${(_downloadProgress * 100).toStringAsFixed(0)}%'
+                                  : 'Connecting...',
+                              style: const TextStyle(color: Colors.white, fontSize: 10),
+                            ),
+                          ],
+                        )
+                      : const _InteractionButton(
+                          icon: Icons.file_download,
+                          label: 'Get',
+                          color: Colors.white,
+                        ),
                 ),
                 const SizedBox(height: 20),
                 IconButton(
