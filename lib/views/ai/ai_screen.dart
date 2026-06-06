@@ -116,7 +116,11 @@ class _AIScreenState extends State<AIScreen> {
                   ),
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
-                      return VideoCard(gif: provider.gifs[index]);
+                      return VideoCard(
+                        gif: provider.gifs[index],
+                        siblings: provider.gifs,
+                        index: index,
+                      );
                     },
                     childCount: provider.gifs.length,
                   ),

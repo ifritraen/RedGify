@@ -13,8 +13,15 @@ import 'playlist_selector_sheet.dart';
 
 class VideoCard extends StatelessWidget {
   final GifInfo gif;
+  final List<GifInfo>? siblings;
+  final int? index;
 
-  const VideoCard({super.key, required this.gif});
+  const VideoCard({
+    super.key,
+    required this.gif,
+    this.siblings,
+    this.index,
+  });
 
   void _showContextSheet(BuildContext context, SelectionProvider selectionProvider, LibraryProvider libraryProvider) {
     final isFav = libraryProvider.isFavorited(gif.id);
@@ -140,7 +147,10 @@ class VideoCard extends StatelessWidget {
               await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => ViewerScreen(gif: gif),
+                  builder: (context) => ViewerScreen(
+                    gifs: siblings ?? [gif],
+                    initialIndex: index ?? 0,
+                  ),
                 ),
               );
               if (context.mounted) {

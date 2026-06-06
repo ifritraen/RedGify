@@ -162,7 +162,11 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
                               ),
                               delegate: SliverChildBuilderDelegate(
                                 (context, index) {
-                                  return VideoCard(gif: provider.creatorGifs[index]);
+                                  return VideoCard(
+                                    gif: provider.creatorGifs[index],
+                                    siblings: provider.creatorGifs,
+                                    index: index,
+                                  );
                                 },
                                 childCount: provider.creatorGifs.length,
                               ),

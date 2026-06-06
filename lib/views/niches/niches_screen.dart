@@ -161,7 +161,11 @@ class _NichesScreenState extends State<NichesScreen> {
                         ),
                         delegate: SliverChildBuilderDelegate(
                           (context, index) {
-                            return VideoCard(gif: provider.nicheGifs[index]);
+                            return VideoCard(
+                              gif: provider.nicheGifs[index],
+                              siblings: provider.nicheGifs,
+                              index: index,
+                            );
                           },
                           childCount: provider.nicheGifs.length,
                         ),

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/feed_provider.dart';
 import '../../providers/search_provider.dart';
 import '../../config/theme.dart';
+import '../../models/gif_info.dart';
 import '../widgets/video_card.dart';
 import '../widgets/sidebar.dart';
 import '../niches/niches_screen.dart';
@@ -195,7 +196,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {
-                          return VideoCard(gif: gifs[index]);
+                          return VideoCard(
+                            gif: gifs[index],
+                            siblings: gifs.cast<GifInfo>(),
+                            index: index,
+                          );
                         },
                         childCount: gifs.length,
                       ),

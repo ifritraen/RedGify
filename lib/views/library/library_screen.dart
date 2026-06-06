@@ -127,7 +127,11 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
                   ),
                   itemCount: provider.favorites.length,
                   itemBuilder: (context, index) {
-                    return VideoCard(gif: provider.favorites[index]);
+                    return VideoCard(
+                      gif: provider.favorites[index],
+                      siblings: provider.favorites,
+                      index: index,
+                    );
                   },
                 ),
 
@@ -258,7 +262,11 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
                         ),
                         itemCount: provider.history.length,
                         itemBuilder: (context, index) {
-                          return VideoCard(gif: provider.history[index]);
+                          return VideoCard(
+                            gif: provider.history[index],
+                            siblings: provider.history,
+                            index: index,
+                          );
                         },
                       ),
                     ),
@@ -303,7 +311,11 @@ class PlaylistDetailScreen extends StatelessWidget {
                   ),
                   itemCount: playlist.items.length,
                   itemBuilder: (context, index) {
-                    return VideoCard(gif: playlist.items[index]);
+                    return VideoCard(
+                      gif: playlist.items[index],
+                      siblings: playlist.items,
+                      index: index,
+                    );
                   },
                 ),
           const BulkActionBar(),

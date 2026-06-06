@@ -97,7 +97,11 @@ class _TagResultsScreenState extends State<TagResultsScreen> {
                             ),
                             delegate: SliverChildBuilderDelegate(
                               (context, index) {
-                                return VideoCard(gif: search.searchResults[index]);
+                                return VideoCard(
+                                  gif: search.searchResults[index],
+                                  siblings: search.searchResults,
+                                  index: index,
+                                );
                               },
                               childCount: search.searchResults.length,
                             ),
