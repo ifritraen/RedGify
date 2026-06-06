@@ -151,7 +151,8 @@ class _NichesScreenState extends State<NichesScreen> {
                     )
                   else ...[
                     SliverPadding(
-                      padding: const EdgeInsets.all(16),
+                      // padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 84),
                       sliver: SliverGrid(
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,

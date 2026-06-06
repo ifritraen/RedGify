@@ -25,17 +25,19 @@ class NeonVectorIcon extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: size + 24,
-            height: size + 24,
+            // width: size + 24,
+            // height: size + 24,
+            width: size + 20,
+            height: size + 20,
             decoration: BoxDecoration(
-              color: Colors.black45,
+              color: Colors.black.withAlpha(90),
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white10),
+              border: Border.all(color: Colors.white.withAlpha(30), width: 1.0),
               boxShadow: [
                 BoxShadow(
-                  color: glowColor.withAlpha(38),
-                  blurRadius: 10,
-                  spreadRadius: 1,
+                  color: glowColor.withAlpha(45),
+                  blurRadius: 8,
+                  spreadRadius: 0.5,
                 )
               ],
             ),
@@ -47,10 +49,15 @@ class NeonVectorIcon extends StatelessWidget {
             ),
           ),
           if (label != null) ...[
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Text(
               label!,
-              style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0.2,
+              ),
             ),
           ],
         ],
@@ -71,7 +78,8 @@ class HeartPainter extends CustomPainter {
     final paint = Paint()
       ..color = color
       ..style = filled ? PaintingStyle.fill : PaintingStyle.stroke
-      ..strokeWidth = 2.5
+      // ..strokeWidth = 2.5
+      ..strokeWidth = 2.0
       ..strokeCap = StrokeCap.round;
 
     final path = Path();
@@ -100,7 +108,8 @@ class PlaylistPainter extends CustomPainter {
     final paint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.5
+      // ..strokeWidth = 2.5
+      ..strokeWidth = 2.0
       ..strokeCap = StrokeCap.round;
 
     final width = size.width;
@@ -116,8 +125,8 @@ class PlaylistPainter extends CustomPainter {
       ..color = color
       ..style = PaintingStyle.fill;
 
-    canvas.drawCircle(Offset(width * 0.12, height * 0.3), 2.5, dotPaint);
-    canvas.drawCircle(Offset(width * 0.12, height * 0.55), 2.5, dotPaint);
+    canvas.drawCircle(Offset(width * 0.12, height * 0.3), 2.0, dotPaint);
+    canvas.drawCircle(Offset(width * 0.12, height * 0.55), 2.0, dotPaint);
     
     // Draw playlist play arrow
     final arrowPaint = Paint()
@@ -146,7 +155,8 @@ class DownloadPainter extends CustomPainter {
     final paint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.5
+      // ..strokeWidth = 2.5
+      ..strokeWidth = 2.0
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
@@ -184,7 +194,8 @@ class SharePainter extends CustomPainter {
     final paint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.5
+      // ..strokeWidth = 2.5
+      ..strokeWidth = 2.0
       ..strokeCap = StrokeCap.round;
 
     final width = size.width;
@@ -201,9 +212,9 @@ class SharePainter extends CustomPainter {
     canvas.drawLine(Offset(width * 0.25, height * 0.5), Offset(width * 0.75, height * 0.75), paint);
 
     // Draw node circles
-    canvas.drawCircle(Offset(width * 0.25, height * 0.5), 4.5, dotPaint);
-    canvas.drawCircle(Offset(width * 0.75, height * 0.25), 4.5, dotPaint);
-    canvas.drawCircle(Offset(width * 0.75, height * 0.75), 4.5, dotPaint);
+    canvas.drawCircle(Offset(width * 0.25, height * 0.5), 3.5, dotPaint);
+    canvas.drawCircle(Offset(width * 0.75, height * 0.25), 3.5, dotPaint);
+    canvas.drawCircle(Offset(width * 0.75, height * 0.75), 3.5, dotPaint);
   }
 
   @override

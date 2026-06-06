@@ -46,7 +46,8 @@ class ApiClient {
       }
     }
 
-    final url = '${ApiConstants.searchEndpoint}?search_text=${Uri.encodeComponent(query)}&limit=$limit&page=$page';
+    // final url = '${ApiConstants.searchEndpoint}?search_text=${Uri.encodeComponent(query)}&limit=$limit&page=$page';
+    final url = '${ApiConstants.searchEndpoint}?search_text=${Uri.encodeComponent(query)}&count=$limit&page=$page&order=trending';
     final response = await get(url);
 
     if (response.statusCode == 200) {
@@ -67,7 +68,13 @@ class ApiClient {
       }
     }
 
-    final url = '${ApiConstants.trendingGifsEndpoint}?limit=$limit&page=$page&order=$order';
+    // final url = '${ApiConstants.trendingGifsEndpoint}?limit=$limit&page=$page&order=$order';
+    final String url;
+    if (order == 'new') {
+      url = '${ApiConstants.searchEndpoint}?type=g&order=latest&count=$limit&page=$page&verified=y';
+    } else {
+      url = '${ApiConstants.baseUrl}/feeds/trending/popular?page=$page&count=$limit';
+    }
     final response = await get(url);
 
     if (response.statusCode == 200) {
@@ -109,7 +116,8 @@ class ApiClient {
       }
     }
 
-    final url = '${ApiConstants.nichesEndpoint}/$nicheId/gifs?limit=$limit&page=$page&order=$order';
+    // final url = '${ApiConstants.nichesEndpoint}/$nicheId/gifs?limit=$limit&page=$page&order=$order';
+    final url = '${ApiConstants.nichesEndpoint}/$nicheId/gifs?count=$limit&page=$page&order=$order';
     final response = await get(url);
 
     if (response.statusCode == 200) {
@@ -172,7 +180,8 @@ class ApiClient {
       }
     }
 
-    final url = '${ApiConstants.usersEndpoint}/$username/search?limit=$limit&page=$page';
+    // final url = '${ApiConstants.usersEndpoint}/$username/search?limit=$limit&page=$page';
+    final url = '${ApiConstants.usersEndpoint}/$username/search?count=$limit&page=$page';
     final response = await get(url);
 
     if (response.statusCode == 200) {

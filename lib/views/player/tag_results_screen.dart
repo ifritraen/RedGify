@@ -60,7 +60,7 @@ class _TagResultsScreenState extends State<TagResultsScreen> {
               Expanded(
                 child: RefreshIndicator(
                   onRefresh: () async {
-                    await search.performSearch(widget.tag);
+                    await search.performSearch(widget.tag, bypassCache: true);
                   },
                   child: CustomScrollView(
                     controller: _scrollController,

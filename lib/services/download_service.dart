@@ -24,12 +24,29 @@ class DownloadService {
     // Resolve downloads directory natively
     Directory? dir;
     try {
-      dir = await getDownloadsDirectory();
+      if (Platform.isAndroid) {
+        dir = Directory('/storage/emulated/0/Download/Rgify');
+      } else {
+        // dir = await getDownloadsDirectory();
+        dir = await getDownloadsDirectory();
+      }
     } catch (_) {}
     
+    if (dir != null) {
+      try {
+        if (!await dir.exists()) {
+          await dir.create(recursive: true);
+        }
+      } catch (e) {
+        dir = null;
+      }
+    }
+    
     // Fallback to Documents directory
+    // dir ??= await getApplicationDocumentsDirectory();
     dir ??= await getApplicationDocumentsDirectory();
 
+    // final filePath = '${dir.path}/rgify_$id.mp4';
     final filePath = '${dir.path}/rgify_$id.mp4';
     final file = File(filePath);
     final sink = file.openWrite();

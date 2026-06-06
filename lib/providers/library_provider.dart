@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/gif_info.dart';
 import '../services/isar_service.dart';
 import '../models/isar_schemas.dart';
@@ -57,15 +58,19 @@ class Playlist {
 
 class LibraryProvider with ChangeNotifier {
   final IsarService _isarService = IsarService();
+  final _secureStorage = const FlutterSecureStorage();
 
   List<GifInfo> _favorites = [];
   List<Playlist> _playlists = [];
   List<GifInfo> _history = [];
+  Map<String, List<String>> _favoriteCategoryMappings = {};
   bool _isInitialized = false;
 
   List<GifInfo> get favorites => _favorites;
   List<Playlist> get playlists => _playlists;
   List<GifInfo> get history => _history;
+  Map<String, List<String>> get favoriteCategoryMappings => _favoriteCategoryMappings;
+  List<String> get favoriteCategories => _favoriteCategoryMappings.keys.toList();
   bool get isInitialized => _isInitialized;
 
   LibraryProvider() {
@@ -76,6 +81,15 @@ class LibraryProvider with ChangeNotifier {
   Future<void> loadLibrary() async {
     try {
       _favorites = await _isarService.getFavorites();
+
+      // Load favorite categories
+      final catStr = await _secureStorage.read(key: 'favorite_categories');
+      if (catStr != null) {
+        final decoded = jsonDecode(catStr) as Map<String, dynamic>;
+        _favoriteCategoryMappings = decoded.map((key, value) => MapEntry(key, List<String>.from(value)));
+      } else {
+        _favoriteCategoryMappings = {};
+      }
 
       final rawPlaylists = await _isarService.getPlaylists();
       _playlists = [];
@@ -140,6 +154,48 @@ class LibraryProvider with ChangeNotifier {
     await loadLibrary();
   }
 
+  // Favorite categories operations
+  List<String> getCategoriesForGif(String gifId) {
+    final List<String> cats = [];
+    _favoriteCategoryMappings.forEach((catName, ids) {
+      if (ids.contains(gifId)) {
+        cats.add(catName);
+      }
+    });
+    return cats;
+  }
+
+  Future<void> _saveCategories() async {
+    await _secureStorage.write(key: 'favorite_categories', value: jsonEncode(_favoriteCategoryMappings));
+    notifyListeners();
+  }
+
+  Future<void> createFavoriteCategory(String categoryName) async {
+    if (!_favoriteCategoryMappings.containsKey(categoryName)) {
+      _favoriteCategoryMappings[categoryName] = [];
+      await _saveCategories();
+    }
+  }
+
+  Future<void> deleteFavoriteCategory(String categoryName) async {
+    if (_favoriteCategoryMappings.containsKey(categoryName)) {
+      _favoriteCategoryMappings.remove(categoryName);
+      await _saveCategories();
+    }
+  }
+
+  Future<void> toggleGifInFavoriteCategory(String categoryName, String gifId) async {
+    if (_favoriteCategoryMappings.containsKey(categoryName)) {
+      final list = _favoriteCategoryMappings[categoryName]!;
+      if (list.contains(gifId)) {
+        list.remove(gifId);
+      } else {
+        list.add(gifId);
+      }
+      await _saveCategories();
+    }
+  }
+
   // --- Import / Export ---
   Future<String> exportBackup() async {
     final Map<String, dynamic> backup = {
@@ -148,6 +204,7 @@ class LibraryProvider with ChangeNotifier {
       'favorites': _favorites.map((i) => i.toJson()).toList(),
       'playlists': _playlists.map((p) => p.toJson()).toList(),
       'history': _history.map((h) => h.toJson()).toList(),
+      'favorite_categories': _favoriteCategoryMappings,
     };
     return jsonEncode(backup);
   }
@@ -245,6 +302,14 @@ class LibraryProvider with ChangeNotifier {
           h.gifInfo.value = existing;
           await isar.isarHistoryItems.put(h);
           await h.gifInfo.save();
+        }
+        // Restore favorite categories
+        final rawCats = data['favorite_categories'] as Map<String, dynamic>?;
+        if (rawCats != null) {
+          final mapped = rawCats.map((key, value) => MapEntry(key, List<String>.from(value)));
+          await _secureStorage.write(key: 'favorite_categories', value: jsonEncode(mapped));
+        } else {
+          await _secureStorage.delete(key: 'favorite_categories');
         }
       });
 

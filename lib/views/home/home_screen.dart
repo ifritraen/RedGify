@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/feed_provider.dart';
@@ -5,7 +6,7 @@ import '../../providers/search_provider.dart';
 import '../../config/theme.dart';
 import '../../models/gif_info.dart';
 import '../widgets/video_card.dart';
-import '../widgets/sidebar.dart';
+// import '../widgets/sidebar.dart';
 import '../niches/niches_screen.dart';
 import '../library/library_screen.dart';
 import '../ai/ai_screen.dart';
@@ -24,6 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   int _currentBottomNavIndex = 0;
+  bool _isBottomBarVisible = true;
 
   @override
   void initState() {
@@ -155,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: RefreshIndicator(
             onRefresh: () async {
               if (isSearching) {
-                await search.performSearch(search.currentQuery);
+                await search.performSearch(search.currentQuery, bypassCache: true);
               } else {
                 await feed.refreshFeed();
               }
@@ -186,7 +188,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 else ...[
                   // Responsive Grid Layout
                   SliverPadding(
-                    padding: const EdgeInsets.all(16),
+                    // padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 84),
                     sliver: SliverGrid(
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
@@ -231,89 +234,158 @@ class _HomeScreenState extends State<HomeScreen> {
 
     Widget activeBody;
     if (_currentBottomNavIndex == 1) {
-      activeBody = const NichesScreen();
+      // activeBody = const NichesScreen();
+      activeBody = const SafeArea(child: NichesScreen());
     } else if (_currentBottomNavIndex == 2) {
       activeBody = const LibraryScreen();
     } else if (_currentBottomNavIndex == 3) {
-      activeBody = const AIScreen();
+      // activeBody = const AIScreen();
+      activeBody = const SafeArea(child: AIScreen());
     } else if (_currentBottomNavIndex == 4) {
-      activeBody = Center(child: Text('Me Profile (Coming soon)', style: TextStyle(color: Colors.white.withAlpha(191))));
+      // activeBody = Center(child: Text('Me Profile (Coming soon)', style: TextStyle(color: Colors.white.withAlpha(191))));
+      activeBody = SafeArea(child: Center(child: Text('Me Profile (Coming soon)', style: TextStyle(color: Colors.white.withAlpha(191)))));
     } else {
-      activeBody = _buildHomeFeedBody(feed, search);
+      // activeBody = _buildHomeFeedBody(feed, search);
+      activeBody = SafeArea(child: _buildHomeFeedBody(feed, search));
     }
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: ShaderMask(
-          shaderCallback: (bounds) => const LinearGradient(
-            colors: [AppTheme.primaryNeon, AppTheme.secondaryNeon],
-          ).createShader(bounds),
-          child: const Text(
-            'RGIFY',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 22,
-              letterSpacing: 1.5,
-              color: Colors.white,
-            ),
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined, color: Colors.white),
-            onPressed: () {},
-          ),
-        ],
-      ),
-      drawer: const SidebarDrawer(),
-      body: Stack(
-        children: [
-          activeBody,
-          const BulkActionBar(),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentBottomNavIndex,
-        onTap: (index) {
-          Provider.of<SelectionProvider>(context, listen: false).exitSelectionMode();
-          setState(() {
-            _currentBottomNavIndex = index;
-          });
+      // appBar: AppBar(
+      //   backgroundColor: Colors.transparent,
+      //   elevation: 0,
+      //   title: ShaderMask(
+      //     shaderCallback: (bounds) => const LinearGradient(
+      //       colors: [AppTheme.primaryNeon, AppTheme.secondaryNeon],
+      //     ).createShader(bounds),
+      //     child: const Text(
+      //       'RGIFY',
+      //       style: TextStyle(
+      //         fontWeight: FontWeight.bold,
+      //         fontSize: 22,
+      //         letterSpacing: 1.5,
+      //         color: Colors.white,
+      //       ),
+      //     ),
+      //   ),
+      //   actions: [
+      //     IconButton(
+      //       icon: const Icon(Icons.notifications_outlined, color: Colors.white),
+      //       onPressed: () {},
+      //     ),
+      //   ],
+      // ),
+      // drawer: const SidebarDrawer(),
+      body: NotificationListener<ScrollNotification>(
+        onNotification: (ScrollNotification notification) {
+          if (notification is ScrollUpdateNotification) {
+            final double scrollDelta = notification.scrollDelta ?? 0.0;
+            if (scrollDelta > 2.0) {
+              // Scrolling down - hide bottom bar
+              if (_isBottomBarVisible) {
+                setState(() {
+                  _isBottomBarVisible = false;
+                });
+              }
+            } else if (scrollDelta < -2.0) {
+              // Scrolling up - show bottom bar
+              if (!_isBottomBarVisible) {
+                setState(() {
+                  _isBottomBarVisible = true;
+                });
+              }
+            }
+          }
+          return false;
         },
-        backgroundColor: AppTheme.background,
-        selectedItemColor: AppTheme.primaryNeon,
-        unselectedItemColor: AppTheme.textSecondary.withAlpha(153),
-        showUnselectedLabels: true,
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.explore_outlined),
-            activeIcon: Icon(Icons.explore),
-            label: 'Niches',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bookmark_outline),
-            activeIcon: Icon(Icons.bookmark),
-            label: 'Library',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.psychology_outlined),
-            activeIcon: Icon(Icons.psychology),
-            label: 'AI Gen',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Me',
-          ),
-        ],
+        child: Stack(
+          children: [
+            activeBody,
+            const BulkActionBar(),
+            // Custom floating frosted-glass bottom bar
+            AnimatedPositioned(
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+              bottom: _isBottomBarVisible ? 20 : -80,
+              left: 24,
+              right: 24,
+              height: 54,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(27),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black.withAlpha(140),
+                      borderRadius: BorderRadius.circular(27),
+                      border: Border.all(color: Colors.white.withAlpha(30), width: 1.0),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(80),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        )
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildNavItem(0, Icons.home_outlined, Icons.home, 'Home'),
+                        _buildNavItem(1, Icons.explore_outlined, Icons.explore, 'Niches'),
+                        _buildNavItem(2, Icons.bookmark_outline, Icons.bookmark, 'Library'),
+                        _buildNavItem(3, Icons.psychology_outlined, Icons.psychology, 'AI Gen'),
+                        _buildNavItem(4, Icons.person_outline, Icons.person, 'Me'),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(int index, IconData outlineIcon, IconData filledIcon, String label) {
+    final isSelected = _currentBottomNavIndex == index;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        Provider.of<SelectionProvider>(context, listen: false).exitSelectionMode();
+        setState(() {
+          _currentBottomNavIndex = index;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              isSelected ? filledIcon : outlineIcon,
+              color: isSelected ? AppTheme.primaryNeon : AppTheme.textSecondary.withAlpha(180),
+              size: 20,
+            ),
+            const SizedBox(height: 3),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: isSelected ? 4 : 0,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppTheme.primaryNeon,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  if (isSelected)
+                    const BoxShadow(
+                      color: AppTheme.primaryNeon,
+                      blurRadius: 4,
+                      spreadRadius: 1,
+                    )
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

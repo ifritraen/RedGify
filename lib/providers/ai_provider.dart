@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/gif_info.dart';
 import '../services/api_client.dart';
+import '../services/isar_service.dart';
 
 class AIProvider with ChangeNotifier {
   final ApiClient _apiClient = ApiClient();
@@ -27,7 +28,7 @@ class AIProvider with ChangeNotifier {
   }
 
   // Load subsequent pages of AI generated stream
-  Future<void> fetchNextPage() async {
+  Future<void> fetchNextPage({bool bypassCache = false}) async {
     if (_isLoading || !_hasMore) return;
 
     _isLoading = true;
@@ -36,14 +37,18 @@ class AIProvider with ChangeNotifier {
 
     try {
       // The RedGIFs AI section is powered by query searches for 'ai' tags
-      final data = await _apiClient.searchGifs('ai', page: _currentPage);
+      final data = await _apiClient.searchGifs('ai', page: _currentPage, bypassCache: bypassCache);
       final rawGifs = data['gifs'] as List? ?? [];
       final newGifs = rawGifs.map((g) => GifInfo.fromJson(g)).toList();
+
+      // Filter out duplicate GIF IDs
+      final existingIds = _gifs.map((g) => g.id).toSet();
+      final uniqueNewGifs = newGifs.where((g) => !existingIds.contains(g.id)).toList();
 
       if (newGifs.isEmpty) {
         _hasMore = false;
       } else {
-        _gifs.addAll(newGifs);
+        _gifs.addAll(uniqueNewGifs);
         _currentPage++;
       }
     } catch (e) {
@@ -56,10 +61,11 @@ class AIProvider with ChangeNotifier {
 
   // Refresh AI feed
   Future<void> refreshFeed() async {
+    await IsarService().clearCachePrefix('search_ai_page_');
     _gifs.clear();
     _currentPage = 1;
     _hasMore = true;
     _errorMessage = null;
-    await fetchNextPage();
+    await fetchNextPage(bypassCache: true);
   }
 }

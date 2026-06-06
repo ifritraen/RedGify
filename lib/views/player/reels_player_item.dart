@@ -30,7 +30,8 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
   VideoPlayerController? _controller;
   bool _initialized = false;
   bool _isPlaying = false;
-  bool _showHud = true;
+  // bool _showHud = true;
+  bool _showHud = false;
   bool _isDownloading = false;
   double _downloadProgress = 0.0;
 
@@ -465,30 +466,36 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
                   NeonVectorIcon(
                     painter: HeartPainter(filled: isFav, color: isFav ? AppTheme.primaryNeon : Colors.white70),
                     glowColor: AppTheme.primaryNeon,
-                    size: 26,
+                    // size: 26,
+                    size: 20,
                     label: '${widget.gif.likes}',
                     onTap: () => libraryProvider.toggleFavorite(widget.gif),
                   ),
-                  const SizedBox(height: 16),
+                  // const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   // Playlist
                   NeonVectorIcon(
                     painter: PlaylistPainter(color: Colors.white70),
                     glowColor: AppTheme.secondaryNeon,
-                    size: 26,
+                    // size: 26,
+                    size: 20,
                     label: 'Save',
                     onTap: _showPlaylistSelector,
                   ),
-                  const SizedBox(height: 16),
+                  // const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   // Download
                   _isDownloading
                       ? Column(
                           children: [
                             SizedBox(
-                              width: 32,
-                              height: 32,
+                              // width: 32,
+                              // height: 32,
+                              width: 28,
+                              height: 28,
                               child: CircularProgressIndicator(
                                 value: _downloadProgress > 0 ? _downloadProgress : null,
-                                strokeWidth: 3,
+                                strokeWidth: 2,
                                 color: AppTheme.primaryNeon,
                                 backgroundColor: Colors.white24,
                               ),
@@ -498,23 +505,26 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
                               _downloadProgress > 0
                                   ? '${(_downloadProgress * 100).toStringAsFixed(0)}%'
                                   : '...',
-                              style: const TextStyle(color: Colors.white, fontSize: 10),
+                              style: const TextStyle(color: Colors.white, fontSize: 9),
                             ),
                           ],
                         )
                       : NeonVectorIcon(
                           painter: DownloadPainter(color: Colors.white70),
                           glowColor: AppTheme.accentNeon,
-                          size: 26,
+                          // size: 26,
+                          size: 20,
                           label: 'Get',
                           onTap: _startDownload,
                         ),
-                  const SizedBox(height: 16),
+                  // const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   // Share
                   NeonVectorIcon(
                     painter: SharePainter(color: Colors.white70),
                     glowColor: Colors.white60,
-                    size: 26,
+                    // size: 26,
+                    size: 20,
                     label: 'Share',
                     onTap: () {
                       // Custom copy link/share action
@@ -551,10 +561,17 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
                         min: 0.0,
                         max: _durationMs,
                         onChanged: (value) {
+                          // setState(() {
+                          //   _isUserDraggingSeekBar = true;
+                          //   _currentPositionMs = value;
+                          // });
                           setState(() {
                             _isUserDraggingSeekBar = true;
                             _currentPositionMs = value;
                           });
+                          if (_controller != null) {
+                            _controller!.seekTo(Duration(milliseconds: value.toInt()));
+                          }
                         },
                         onChangeEnd: (value) {
                           if (_controller != null) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/library_provider.dart';
 import '../../config/theme.dart';
+import '../../models/gif_info.dart';
 import '../widgets/video_card.dart';
 import '../widgets/bulk_action_bar.dart';
 
@@ -14,11 +15,55 @@ class LibraryScreen extends StatefulWidget {
 
 class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  String _selectedFavoriteCategory = 'All';
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+  }
+
+  void _showCreateCategoryDialog(BuildContext context, LibraryProvider provider) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppTheme.background,
+          title: const Text('New Favorite Category', style: TextStyle(color: Colors.white)),
+          content: TextField(
+            controller: controller,
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              hintText: 'Enter category name...',
+              hintStyle: const TextStyle(color: Colors.white38),
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.white.withAlpha(50)),
+              ),
+              focusedBorder: const UnderlineInputBorder(
+                borderSide: BorderSide(color: AppTheme.primaryNeon),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel', style: TextStyle(color: AppTheme.textSecondary)),
+            ),
+            TextButton(
+              onPressed: () {
+                final name = controller.text.trim();
+                if (name.isNotEmpty) {
+                  provider.createFavoriteCategory(name);
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text('Create', style: TextStyle(color: AppTheme.primaryNeon)),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -110,30 +155,151 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
         controller: _tabController,
         children: [
           // Favorites tab
-          provider.favorites.isEmpty
-              ? Center(
-                  child: Text(
-                    'No favorites added yet.',
-                    style: TextStyle(color: Colors.white.withAlpha(100)),
+          Builder(
+            builder: (context) {
+              final List<GifInfo> filteredFavorites;
+              if (_selectedFavoriteCategory == 'All') {
+                filteredFavorites = provider.favorites;
+              } else {
+                final gifIds = provider.favoriteCategoryMappings[_selectedFavoriteCategory] ?? [];
+                filteredFavorites = provider.favorites.where((g) => gifIds.contains(g.id)).toList();
+              }
+
+              return Column(
+                children: [
+                  // Categories filter bar
+                  Container(
+                    height: 50,
+                    margin: const EdgeInsets.only(top: 8, bottom: 4),
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      children: [
+                        // "All" chip
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: ChoiceChip(
+                            label: const Text('All'),
+                            selected: _selectedFavoriteCategory == 'All',
+                            onSelected: (selected) {
+                              if (selected) {
+                                setState(() {
+                                  _selectedFavoriteCategory = 'All';
+                                });
+                              }
+                            },
+                            backgroundColor: AppTheme.cardBg,
+                            selectedColor: AppTheme.primaryNeon,
+                            labelStyle: TextStyle(
+                              color: _selectedFavoriteCategory == 'All' ? Colors.black : Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        // Custom categories
+                        ...provider.favoriteCategories.map((cat) {
+                          final isSelected = _selectedFavoriteCategory == cat;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: GestureDetector(
+                              onLongPress: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    backgroundColor: AppTheme.background,
+                                    title: Text('Delete Category "$cat"?'),
+                                    content: const Text('This will delete the category but keep your favorites.', style: TextStyle(color: Colors.white70)),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: const Text('Cancel', style: TextStyle(color: AppTheme.textSecondary)),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          provider.deleteFavoriteCategory(cat);
+                                          if (_selectedFavoriteCategory == cat) {
+                                            setState(() {
+                                              _selectedFavoriteCategory = 'All';
+                                            });
+                                          }
+                                          Navigator.pop(context);
+                                        },
+                                        child: const Text('Delete', style: TextStyle(color: Colors.redAccent)),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                              child: ChoiceChip(
+                                label: Text(cat),
+                                selected: isSelected,
+                                onSelected: (selected) {
+                                  if (selected) {
+                                    setState(() {
+                                      _selectedFavoriteCategory = cat;
+                                    });
+                                  }
+                                },
+                                backgroundColor: AppTheme.cardBg,
+                                selectedColor: AppTheme.primaryNeon,
+                                labelStyle: TextStyle(
+                                  color: isSelected ? Colors.black : Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
+                        // Add category chip button
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: InputChip(
+                            label: const Text('+ Add Category'),
+                            onPressed: () => _showCreateCategoryDialog(context, provider),
+                            backgroundColor: AppTheme.cardBg,
+                            labelStyle: const TextStyle(
+                              color: AppTheme.primaryNeon,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                )
-              : GridView.builder(
-                  padding: const EdgeInsets.all(16),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 0,
-                    childAspectRatio: 0.70,
+                  // Grid view of favorites
+                  Expanded(
+                    child: filteredFavorites.isEmpty
+                        ? Center(
+                            child: Text(
+                              _selectedFavoriteCategory == 'All'
+                                  ? 'No favorites added yet.'
+                                  : 'No items in this category.',
+                              style: TextStyle(color: Colors.white.withAlpha(100)),
+                            ),
+                          )
+                        : GridView.builder(
+                            // padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 84),
+                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 0,
+                              childAspectRatio: 0.70,
+                            ),
+                            itemCount: filteredFavorites.length,
+                            itemBuilder: (context, index) {
+                              return VideoCard(
+                                gif: filteredFavorites[index],
+                                siblings: filteredFavorites,
+                                index: index,
+                              );
+                            },
+                          ),
                   ),
-                  itemCount: provider.favorites.length,
-                  itemBuilder: (context, index) {
-                    return VideoCard(
-                      gif: provider.favorites[index],
-                      siblings: provider.favorites,
-                      index: index,
-                    );
-                  },
-                ),
+                ],
+              );
+            },
+          ),
 
           // Playlists tab
           Column(
@@ -171,7 +337,8 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
                         ),
                       )
                     : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        // padding: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: const EdgeInsets.only(left: 16, right: 16, top: 0, bottom: 84),
                         itemCount: provider.playlists.length,
                         itemBuilder: (context, index) {
                           final playlist = provider.playlists[index];
@@ -253,7 +420,8 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
                     ),
                     Expanded(
                       child: GridView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        // padding: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 84),
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
                           crossAxisSpacing: 16,

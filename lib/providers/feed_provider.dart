@@ -58,9 +58,10 @@ class FeedProvider with ChangeNotifier {
       final rawGifs = data['gifs'] as List? ?? [];
       final newGifs = rawGifs.map((g) => GifInfo.fromJson(g)).toList();
       
-      // Filter out watched GIFs
+      // Filter out watched and duplicate GIFs
       final watchedIds = await IsarService().getWatchedGifIds();
-      final filteredGifs = newGifs.where((g) => !watchedIds.contains(g.id)).toList();
+      final existingIds = _gifs.map((g) => g.id).toSet();
+      final filteredGifs = newGifs.where((g) => !existingIds.contains(g.id) && !watchedIds.contains(g.id)).toList();
       
       if (newGifs.isEmpty) {
         _hasMore = false;
@@ -90,6 +91,7 @@ class FeedProvider with ChangeNotifier {
 
   // Refresh feed from page 1
   Future<void> refreshFeed() async {
+    await IsarService().clearCachePrefix('feed_${_activeOrder}_page_');
     _gifs.clear();
     _currentPage = 1;
     _hasMore = true;

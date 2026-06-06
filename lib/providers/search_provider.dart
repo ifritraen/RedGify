@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/gif_info.dart';
 import '../services/api_client.dart';
+import '../services/isar_service.dart';
 
 class SearchProvider with ChangeNotifier {
   final ApiClient _apiClient = ApiClient();
@@ -19,7 +20,7 @@ class SearchProvider with ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   // Run a new search query
-  Future<void> performSearch(String query) async {
+  Future<void> performSearch(String query, {bool bypassCache = false}) async {
     _currentQuery = query;
     _searchResults.clear();
     _currentPage = 1;
@@ -31,11 +32,15 @@ class SearchProvider with ChangeNotifier {
       return;
     }
 
-    await fetchNextSearchResults();
+    if (bypassCache) {
+      await IsarService().clearCachePrefix('search_${query}_page_');
+    }
+
+    await fetchNextSearchResults(bypassCache: bypassCache);
   }
 
   // Load next page of search results
-  Future<void> fetchNextSearchResults() async {
+  Future<void> fetchNextSearchResults({bool bypassCache = false}) async {
     if (_isLoading || !_hasMore || _currentQuery.isEmpty) return;
 
     _isLoading = true;
@@ -43,15 +48,19 @@ class SearchProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final data = await _apiClient.searchGifs(_currentQuery, page: _currentPage);
+      final data = await _apiClient.searchGifs(_currentQuery, page: _currentPage, bypassCache: bypassCache);
       final rawGifs = data['gifs'] as List? ?? [];
 
       final newGifs = rawGifs.map((g) => GifInfo.fromJson(g)).toList();
 
+      // Filter out duplicate GIF IDs
+      final existingIds = _searchResults.map((g) => g.id).toSet();
+      final uniqueNewGifs = newGifs.where((g) => !existingIds.contains(g.id)).toList();
+
       if (newGifs.isEmpty) {
         _hasMore = false;
       } else {
-        _searchResults.addAll(newGifs);
+        _searchResults.addAll(uniqueNewGifs);
         _currentPage++;
       }
     } catch (e) {

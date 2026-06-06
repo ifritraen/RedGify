@@ -23,6 +23,57 @@ class VideoCard extends StatelessWidget {
     this.index,
   });
 
+  void _showCategorySelectionDialog(BuildContext context, LibraryProvider libraryProvider) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            final categories = libraryProvider.favoriteCategories;
+            final gifCategories = libraryProvider.getCategoriesForGif(gif.id);
+
+            return AlertDialog(
+              backgroundColor: AppTheme.background,
+              title: const Text('Manage Categories', style: TextStyle(color: Colors.white)),
+              content: categories.isEmpty
+                  ? const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Text(
+                        'No categories created yet. Create some in the Favorites tab!',
+                        style: TextStyle(color: Colors.white60),
+                      ),
+                    )
+                  : SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: categories.map((catName) {
+                          final belongs = gifCategories.contains(catName);
+                          return CheckboxListTile(
+                            activeColor: AppTheme.primaryNeon,
+                            checkColor: Colors.black,
+                            title: Text(catName, style: const TextStyle(color: Colors.white)),
+                            value: belongs,
+                            onChanged: (val) async {
+                              await libraryProvider.toggleGifInFavoriteCategory(catName, gif.id);
+                              setState(() {});
+                            },
+                          );
+                        }).toList(),
+                      ),
+                    ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text('Done', style: TextStyle(color: AppTheme.primaryNeon)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   void _showContextSheet(BuildContext context, SelectionProvider selectionProvider, LibraryProvider libraryProvider) {
     final isFav = libraryProvider.isFavorited(gif.id);
     
@@ -72,6 +123,15 @@ class VideoCard extends StatelessWidget {
                   libraryProvider.toggleFavorite(gif);
                 },
               ),
+              if (isFav)
+                ListTile(
+                  leading: const Icon(Icons.category_outlined, color: Colors.white70),
+                  title: const Text('Manage Categories', style: TextStyle(color: Colors.white)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showCategorySelectionDialog(context, libraryProvider);
+                  },
+                ),
               ListTile(
                 leading: const Icon(Icons.file_download, color: Colors.white70),
                 title: const Text('Download', style: TextStyle(color: Colors.white)),

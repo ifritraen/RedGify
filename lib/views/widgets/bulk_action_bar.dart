@@ -57,6 +57,49 @@ class _BulkActionBarState extends State<BulkActionBar> {
     }
   }
 
+  void _showCreatePlaylistDialog(BuildContext context, LibraryProvider library) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: AppTheme.background,
+          title: const Text('New Playlist', style: TextStyle(color: Colors.white)),
+          content: TextField(
+            controller: controller,
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              hintText: 'Enter playlist name...',
+              hintStyle: const TextStyle(color: Colors.white38),
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Colors.white.withAlpha(50)),
+              ),
+              focusedBorder: const UnderlineInputBorder(
+                borderSide: BorderSide(color: AppTheme.primaryNeon),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancel', style: TextStyle(color: AppTheme.textSecondary)),
+            ),
+            TextButton(
+              onPressed: () {
+                final name = controller.text.trim();
+                if (name.isNotEmpty) {
+                  library.createPlaylist(name);
+                  Navigator.pop(dialogContext);
+                }
+              },
+              child: const Text('Create', style: TextStyle(color: AppTheme.primaryNeon)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _bulkAddToPlaylist(BuildContext context, List<GifInfo> gifs, LibraryProvider library, SelectionProvider selection) {
     showModalBottomSheet(
       context: context,
@@ -66,57 +109,82 @@ class _BulkActionBarState extends State<BulkActionBar> {
       ),
       builder: (bottomSheetContext) {
         return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 16),
-                child: Text(
-                  'Select Playlist for Bulk Add',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-              ),
-              const Divider(color: Colors.white12, height: 1),
-              Expanded(
-                child: library.playlists.isEmpty
-                    ? const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(24.0),
-                          child: Text('No playlists found.', style: TextStyle(color: Colors.white60)),
+          child: Consumer<LibraryProvider>(
+            builder: (context, libProvider, child) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // const Padding(
+                  //   padding: EdgeInsets.symmetric(vertical: 16),
+                  //   child: Text(
+                  //     'Select Playlist for Bulk Add',
+                  //     style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                  //   ),
+                  // ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Select Playlist for Bulk Add',
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
                         ),
-                      )
-                    : ListView.builder(
-                        itemCount: library.playlists.length,
-                        itemBuilder: (context, index) {
-                          final p = library.playlists[index];
-                          return ListTile(
-                            leading: const Icon(Icons.playlist_play, color: AppTheme.primaryNeon),
-                            title: Text(p.name, style: const TextStyle(color: Colors.white)),
-                            onTap: () async {
-                              Navigator.pop(bottomSheetContext);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Adding items to playlist...'), duration: Duration(seconds: 1)),
+                        IconButton(
+                          icon: const Icon(Icons.add, color: AppTheme.primaryNeon),
+                          onPressed: () => _showCreatePlaylistDialog(context, libProvider),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Divider(color: Colors.white12, height: 1),
+                  Flexible(
+                    // child: library.playlists.isEmpty
+                    child: libProvider.playlists.isEmpty
+                        ? const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(24.0),
+                              child: Text('No playlists found.', style: TextStyle(color: Colors.white60)),
+                            ),
+                          )
+                        : ListView.builder(
+                            shrinkWrap: true,
+                            // itemCount: library.playlists.length,
+                            itemCount: libProvider.playlists.length,
+                            itemBuilder: (context, index) {
+                              // final p = library.playlists[index];
+                              final p = libProvider.playlists[index];
+                              return ListTile(
+                                leading: const Icon(Icons.playlist_play, color: AppTheme.primaryNeon),
+                                title: Text(p.name, style: const TextStyle(color: Colors.white)),
+                                onTap: () async {
+                                  Navigator.pop(bottomSheetContext);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Adding items to playlist...'), duration: Duration(seconds: 1)),
+                                  );
+                                  
+                                  for (var gif in gifs) {
+                                    // await library.addToPlaylist(p.id, gif);
+                                    await libProvider.addToPlaylist(p.id, gif);
+                                  }
+                                  
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text('Successfully added ${gifs.length} items to ${p.name}!'),
+                                        backgroundColor: Colors.green,
+                                      ),
+                                    );
+                                  }
+                                  selection.exitSelectionMode();
+                                },
                               );
-                              
-                              for (var gif in gifs) {
-                                await library.addToPlaylist(p.id, gif);
-                              }
-                              
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('Successfully added ${gifs.length} items to ${p.name}!'),
-                                    backgroundColor: Colors.green,
-                                  ),
-                                );
-                              }
-                              selection.exitSelectionMode();
                             },
-                          );
-                        },
-                      ),
-              ),
-            ],
+                          ),
+                  ),
+                ],
+              );
+            },
           ),
         );
       },

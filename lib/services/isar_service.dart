@@ -256,6 +256,15 @@ class IsarService {
     } catch (_) {}
   }
 
+  Future<void> clearCachePrefix(String prefix) async {
+    try {
+      final isar = await db;
+      await isar.writeTxn(() async {
+        await isar.isarFeedCaches.filter().cacheKeyStartsWith(prefix).deleteAll();
+      });
+    } catch (_) {}
+  }
+
   Future<void> clearAllCache() async {
     final isar = await db;
     await isar.writeTxn(() async {
