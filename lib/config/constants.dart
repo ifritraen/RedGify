@@ -3,6 +3,9 @@ class ApiConstants {
   static const String authTemporaryEndpoint = '$baseUrl/auth/temporary';
   static const String searchEndpoint = '$baseUrl/gifs/search';
   static const String trendingGifsEndpoint = '$baseUrl/explore/trending-gifs';
+  static const String nichesEndpoint = '$baseUrl/niches';
+  static const String tagsEndpoint = '$baseUrl/tags';
+  static const String trendingTagsEndpoint = '$baseUrl/tags/trending';
   
   // Custom headers to bypass simple bot checks
   static const Map<String, String> baseHeaders = {

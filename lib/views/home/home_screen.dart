@@ -5,6 +5,7 @@ import '../../providers/search_provider.dart';
 import '../../config/theme.dart';
 import '../widgets/video_card.dart';
 import '../widgets/sidebar.dart';
+import '../niches/niches_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -58,15 +59,131 @@ class _HomeScreenState extends State<HomeScreen> {
     Provider.of<SearchProvider>(context, listen: false).clearSearch();
   }
 
+  Widget _buildHomeFeedBody(FeedProvider feed, SearchProvider search) {
+    final isSearching = search.currentQuery.isNotEmpty;
+    final List gifs = isSearching ? search.searchResults : feed.gifs;
+    final bool isLoading = isSearching ? search.isLoading : feed.isLoading;
+    final String? error = isSearching ? search.errorMessage : feed.errorMessage;
+
+    return Column(
+      children: [
+        // Elegant Search Bar
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: TextField(
+            controller: _searchController,
+            onSubmitted: _onSearchSubmit,
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              hintText: 'Search Gifs & Niches...',
+              hintStyle: const TextStyle(color: Colors.white38),
+              prefixIcon: const Icon(Icons.search, color: Colors.white54),
+              suffixIcon: isSearching
+                  ? IconButton(
+                      icon: const Icon(Icons.clear, color: Colors.white54),
+                      onPressed: _clearSearch,
+                    )
+                  : null,
+              filled: true,
+              fillColor: AppTheme.cardBg,
+              contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: BorderSide(color: Colors.white.withAlpha(20)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+                borderSide: const BorderSide(color: AppTheme.primaryNeon),
+              ),
+            ),
+          ),
+        ),
+        
+        // Main dynamic feed content
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: () async {
+              if (isSearching) {
+                await search.performSearch(search.currentQuery);
+              } else {
+                await feed.refreshFeed();
+              }
+            },
+            child: CustomScrollView(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                if (error != null)
+                  SliverFillRemaining(
+                    child: Center(
+                      child: Text(
+                        'Error loading content: $error',
+                        style: const TextStyle(color: Colors.redAccent),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  )
+                else if (gifs.isEmpty && !isLoading)
+                  const SliverFillRemaining(
+                    child: Center(
+                      child: Text(
+                        'No content found.',
+                        style: TextStyle(color: AppTheme.textSecondary),
+                      ),
+                    ),
+                  )
+                else ...[
+                  // Responsive Grid Layout
+                  SliverPadding(
+                    padding: const EdgeInsets.all(16),
+                    sliver: SliverGrid(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 0,
+                        childAspectRatio: 0.70, // Optimized aspect ratio
+                      ),
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          return VideoCard(gif: gifs[index]);
+                        },
+                        childCount: gifs.length,
+                      ),
+                    ),
+                  ),
+                  if (isLoading)
+                    const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 24),
+                        child: Center(
+                          child: CircularProgressIndicator(color: AppTheme.primaryNeon),
+                        ),
+                      ),
+                    ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final feed = Provider.of<FeedProvider>(context);
     final search = Provider.of<SearchProvider>(context);
 
-    final isSearching = search.currentQuery.isNotEmpty;
-    final List gifs = isSearching ? search.searchResults : feed.gifs;
-    final bool isLoading = isSearching ? search.isLoading : feed.isLoading;
-    final String? error = isSearching ? search.errorMessage : feed.errorMessage;
+    Widget activeBody;
+    if (_currentBottomNavIndex == 1) {
+      activeBody = const NichesScreen();
+    } else if (_currentBottomNavIndex == 2) {
+      activeBody = Center(child: Text('Bookmarks Library (Coming soon)', style: TextStyle(color: Colors.white.withAlpha(191))));
+    } else if (_currentBottomNavIndex == 3) {
+      activeBody = Center(child: Text('Me Profile (Coming soon)', style: TextStyle(color: Colors.white.withAlpha(191))));
+    } else {
+      activeBody = _buildHomeFeedBody(feed, search);
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -94,108 +211,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       drawer: const SidebarDrawer(),
-      body: Column(
-        children: [
-          // Elegant Search Bar
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: TextField(
-              controller: _searchController,
-              onSubmitted: _onSearchSubmit,
-              style: const TextStyle(color: Colors.white),
-              decoration: InputDecoration(
-                hintText: 'Search Gifs & Niches...',
-                hintStyle: const TextStyle(color: Colors.white38),
-                prefixIcon: const Icon(Icons.search, color: Colors.white54),
-                suffixIcon: isSearching
-                    ? IconButton(
-                        icon: const Icon(Icons.clear, color: Colors.white54),
-                        onPressed: _clearSearch,
-                      )
-                    : null,
-                filled: true,
-                fillColor: AppTheme.cardBg,
-                contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
-                  borderSide: BorderSide(color: Colors.white.withAlpha(20)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
-                  borderSide: const BorderSide(color: AppTheme.primaryNeon),
-                ),
-              ),
-            ),
-          ),
-          
-          // Main dynamic feed content
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: () async {
-                if (isSearching) {
-                  await search.performSearch(search.currentQuery);
-                } else {
-                  await feed.refreshFeed();
-                }
-              },
-              child: CustomScrollView(
-                controller: _scrollController,
-                physics: const AlwaysScrollableScrollPhysics(),
-                slivers: [
-                  if (error != null)
-                    SliverFillRemaining(
-                      child: Center(
-                        child: Text(
-                          'Error loading content: $error',
-                          style: const TextStyle(color: Colors.redAccent),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    )
-                  else if (gifs.isEmpty && !isLoading)
-                    const SliverFillRemaining(
-                      child: Center(
-                        child: Text(
-                          'No content found.',
-                          style: TextStyle(color: AppTheme.textSecondary),
-                        ),
-                      ),
-                    )
-                  else ...[
-                    // Responsive Grid Layout
-                    SliverPadding(
-                      padding: const EdgeInsets.all(16),
-                      sliver: SliverGrid(
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 0,
-                          childAspectRatio: 0.70, // Optimized aspect ratio
-                        ),
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            return VideoCard(gif: gifs[index]);
-                          },
-                          childCount: gifs.length,
-                        ),
-                      ),
-                    ),
-                    if (isLoading)
-                      const SliverToBoxAdapter(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(vertical: 24),
-                          child: Center(
-                            child: CircularProgressIndicator(color: AppTheme.primaryNeon),
-                          ),
-                        ),
-                      ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+      body: activeBody,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentBottomNavIndex,
         onTap: (index) {

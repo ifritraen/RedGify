@@ -57,4 +57,40 @@ class ApiClient {
       throw Exception('Failed to load trending feed: ${response.statusCode}');
     }
   }
+
+  // Fetch all Niches list
+  Future<Map<String, dynamic>> getNiches() async {
+    const url = ApiConstants.nichesEndpoint;
+    final response = await get(url);
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw Exception('Failed to fetch niches list: ${response.statusCode}');
+    }
+  }
+
+  // Fetch Gifs for a specific niche
+  Future<Map<String, dynamic>> getNicheGifs(String nicheId, {int limit = 20, int page = 1}) async {
+    final url = '${ApiConstants.nichesEndpoint}/$nicheId/gifs?limit=$limit&page=$page';
+    final response = await get(url);
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw Exception('Failed to load niche gifs: ${response.statusCode}');
+    }
+  }
+
+  // Fetch trending tags list
+  Future<List<dynamic>> getTrendingTags() async {
+    const url = ApiConstants.trendingTagsEndpoint;
+    final response = await get(url);
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as List<dynamic>;
+    } else {
+      throw Exception('Failed to load trending tags: ${response.statusCode}');
+    }
+  }
 }
