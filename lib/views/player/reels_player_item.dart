@@ -38,6 +38,7 @@ class ReelsPlayerItem extends StatefulWidget {
 class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
   VideoPlayerController? _controller;
   bool _initialized = false;
+  bool _initError = false;
   // bool _isPlaying = false;
   // bool _showHud = true;
   bool _showHud = false;
@@ -74,10 +75,26 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
 
   bool get _isImg {
     final mediaUrl = widget.gif.urls.hd.isNotEmpty ? widget.gif.urls.hd : widget.gif.urls.sd;
-    return mediaUrl.toLowerCase().endsWith('.jpg') ||
+    // Check by extension first
+    if (mediaUrl.toLowerCase().endsWith('.jpg') ||
         mediaUrl.toLowerCase().endsWith('.jpeg') ||
-        mediaUrl.toLowerCase().endsWith('.png') ||
-        widget.gif.duration == 0.0;
+        mediaUrl.toLowerCase().endsWith('.png')) {
+      return true;
+    }
+    // duration == 0 is NOT a reliable signal for local files — local video files
+    // also have duration 0 before initialization. Only treat as image if extension confirms it.
+    return false;
+  }
+
+  /// Returns true if the mediaUrl points to a local filesystem path.
+  bool _isLocalPath(String mediaUrl) {
+    // Android/Linux absolute path
+    if (mediaUrl.startsWith('/')) return true;
+    // Windows absolute path (e.g. C:\... or C:/...)
+    if (mediaUrl.length > 2 && mediaUrl[1] == ':') return true;
+    // Not an http/https URL
+    if (!mediaUrl.startsWith('http://') && !mediaUrl.startsWith('https://')) return true;
+    return false;
   }
 
   void _addToHistory() {
@@ -97,9 +114,9 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
     }
     
     final mediaUrl = widget.gif.urls.hd.isNotEmpty ? widget.gif.urls.hd : widget.gif.urls.sd;
-    final bool isLocalFile = mediaUrl.startsWith('/') || mediaUrl.contains(':\\') || mediaUrl.contains(':/') || !mediaUrl.startsWith('http');
 
-    if (isLocalFile) {
+    if (_isLocalPath(mediaUrl)) {
+      // Direct local filesystem path (Local Reels or already-local URL)
       _controller = VideoPlayerController.file(File(mediaUrl));
     } else if (VideoCacheManager.isCached(widget.gif.id)) {
       final cachedPath = VideoCacheManager.getCachedPath(widget.gif.id)!;
@@ -134,6 +151,7 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
         if (!mounted) return;
         setState(() {
           _initialized = true;
+          _initError = false;
           _durationMs = _controller!.value.duration.inMilliseconds.toDouble();
         });
         _controller!.setLooping(false);
@@ -143,6 +161,11 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
           _controller!.play();
           InactivityMonitor.isAnyVideoPlaying = true;
         }
+      }).catchError((e) {
+        if (!mounted) return;
+        setState(() {
+          _initError = true;
+        });
       });
   }
 
@@ -482,6 +505,17 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
                 ),
               ),
             )
+          else if (_initError)
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.broken_image, color: Colors.white30, size: 48),
+                  const SizedBox(height: 8),
+                  const Text('Failed to load video', style: TextStyle(color: Colors.white38, fontSize: 12)),
+                ],
+              ),
+            )
           else
             const Center(
               child: CircularProgressIndicator(color: AppTheme.primaryNeon),
@@ -672,7 +706,7 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
                       final progress = downloadProvider.getProgress(widget.gif.id);
                       
                       final mediaUrl = widget.gif.urls.hd.isNotEmpty ? widget.gif.urls.hd : widget.gif.urls.sd;
-                      final isLocalFile = mediaUrl.startsWith('/') || mediaUrl.contains(':\\') || mediaUrl.contains(':/') || !mediaUrl.startsWith('http');
+                      final isLocalFile = _isLocalPath(mediaUrl);
                       final isDownloadedLocal = isLocalFile || downloadProvider.completedDownloads.any((x) => x.gif.id == widget.gif.id && File(x.localPath).existsSync());
 
                       if (isDownloadedLocal) {

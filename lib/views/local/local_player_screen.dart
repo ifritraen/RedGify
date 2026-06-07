@@ -16,7 +16,10 @@ class LocalPlayerScreen extends StatelessWidget {
     return files.map((file) {
       return GifInfo(
         id: file.path,
-        duration: 0.0,
+        // Use -1.0 as sentinel so _isImg (which checks duration==0.0) does NOT
+        // misidentify local video files as static images. The actual duration
+        // will be read from the video controller after initialization.
+        duration: -1.0,
         width: 0,
         height: 0,
         views: 0,
