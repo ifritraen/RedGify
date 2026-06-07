@@ -65,11 +65,32 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
   @override
   void initState() {
     super.initState();
-    _initializePlayer();
+    // Defer player init to post-frame so DownloadProvider has time to load
+    // its persisted completedDownloads before we check for offline files.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final downloadProvider = Provider.of<DownloadProvider>(context, listen: false);
+      if (downloadProvider.isLoaded) {
+        _initializePlayer();
+      } else {
+        // Wait for downloads to load, then init
+        downloadProvider.addListener(_onDownloadsLoaded);
+      }
+    });
     
     // Add to history if active
     if (widget.isActive) {
       _addToHistory();
+    }
+  }
+
+  void _onDownloadsLoaded() {
+    final downloadProvider = Provider.of<DownloadProvider>(context, listen: false);
+    if (downloadProvider.isLoaded) {
+      downloadProvider.removeListener(_onDownloadsLoaded);
+      if (mounted && _controller == null) {
+        _initializePlayer();
+      }
     }
   }
 
@@ -221,6 +242,10 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
   @override
   void dispose() {
     _seekTimer?.cancel();
+    // Remove pending downloads-loaded listener if still registered
+    try {
+      Provider.of<DownloadProvider>(context, listen: false).removeListener(_onDownloadsLoaded);
+    } catch (_) {}
     if (_controller != null) {
       _controller!.removeListener(_onControllerUpdate);
       _controller!.dispose();

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;
+import 'package:permission_handler/permission_handler.dart';
 
 class LocalPlayerProvider extends ChangeNotifier {
   final _storage = const FlutterSecureStorage();
@@ -13,15 +14,31 @@ class LocalPlayerProvider extends ChangeNotifier {
   final List<FileSystemEntity> _subFolders = [];
   final List<FileSystemEntity> _videoFiles = [];
   bool _isLoading = false;
+  String? _scanError;
 
   String? get rootPath => _rootPath;
   String? get currentPath => _currentPath;
   List<FileSystemEntity> get subFolders => _subFolders;
   List<FileSystemEntity> get videoFiles => _videoFiles;
   bool get isLoading => _isLoading;
+  String? get scanError => _scanError;
 
   LocalPlayerProvider() {
     _loadStoredRoot();
+  }
+
+  /// Request media read permissions (Android 13+ needs READ_MEDIA_VIDEO,
+  /// older Android uses READ_EXTERNAL_STORAGE).
+  Future<bool> _requestPermissions() async {
+    if (!Platform.isAndroid) return true;
+    // Android 13+ (API 33+)
+    if (await Permission.videos.isGranted) return true;
+    final result = await Permission.videos.request();
+    if (result.isGranted) return true;
+    // Fallback for Android < 13
+    if (await Permission.storage.isGranted) return true;
+    final storageResult = await Permission.storage.request();
+    return storageResult.isGranted;
   }
 
   Future<void> _loadStoredRoot() async {
@@ -45,6 +62,8 @@ class LocalPlayerProvider extends ChangeNotifier {
 
   Future<void> selectStorageRoot() async {
     try {
+      // Request permission before opening picker
+      await _requestPermissions();
       final String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
       if (selectedDirectory != null) {
         _rootPath = selectedDirectory;
@@ -61,6 +80,7 @@ class LocalPlayerProvider extends ChangeNotifier {
     _currentPath = null;
     _subFolders.clear();
     _videoFiles.clear();
+    _scanError = null;
     await _storage.delete(key: _storageKey);
     notifyListeners();
   }
@@ -96,6 +116,14 @@ class LocalPlayerProvider extends ChangeNotifier {
     if (_currentPath == null) return;
     _subFolders.clear();
     _videoFiles.clear();
+    _scanError = null;
+
+    // Ensure permissions before scanning
+    final hasPermission = await _requestPermissions();
+    if (!hasPermission) {
+      _scanError = 'Storage permission denied. Please grant media access in Settings.';
+      return;
+    }
 
     try {
       final dir = Directory(_currentPath!);
@@ -125,6 +153,8 @@ class LocalPlayerProvider extends ChangeNotifier {
       // Sort alphabetically
       _subFolders.sort((a, b) => p.basename(a.path).toLowerCase().compareTo(p.basename(b.path).toLowerCase()));
       _videoFiles.sort((a, b) => p.basename(a.path).toLowerCase().compareTo(p.basename(b.path).toLowerCase()));
-    } catch (_) {}
+    } catch (e) {
+      _scanError = 'Failed to read directory: $e';
+    }
   }
 }

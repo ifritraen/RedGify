@@ -38,6 +38,7 @@ class DownloadProvider extends ChangeNotifier {
 
   Map<String, double> get activeDownloads => _activeDownloads;
   List<DownloadedItem> get completedDownloads => _completedDownloads;
+  bool get isLoaded => _isLoaded;
 
   DownloadProvider() {
     _loadCompletedDownloads();

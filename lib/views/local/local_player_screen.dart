@@ -84,7 +84,9 @@ class LocalPlayerScreen extends StatelessWidget {
           ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryNeon))
           : provider.rootPath == null
               ? _buildSetupView(context)
-              : _buildFolderExplorer(context, provider, isDark),
+              : provider.scanError != null
+                  ? _buildErrorView(context, provider.scanError!)
+                  : _buildFolderExplorer(context, provider, isDark),
       floatingActionButton: provider.rootPath != null && provider.videoFiles.isNotEmpty
           ? FloatingActionButton.extended(
               backgroundColor: AppTheme.primaryNeon,
@@ -183,6 +185,43 @@ class LocalPlayerScreen extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorView(BuildContext context, String error) {
+    final provider = Provider.of<LocalPlayerProvider>(context, listen: false);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.lock_outline, size: 52, color: Colors.redAccent),
+            const SizedBox(height: 16),
+            Text(
+              error,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: AppTheme.textSecondary, fontSize: 14, height: 1.5),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryNeon,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              ),
+              onPressed: () => provider.selectStorageRoot(),
+              icon: const Icon(Icons.folder_open, size: 18),
+              label: Text('Re-select Folder', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () => provider.clearStorageRoot(),
+              child: const Text('Reset', style: TextStyle(color: Colors.redAccent)),
+            ),
+          ],
         ),
       ),
     );
