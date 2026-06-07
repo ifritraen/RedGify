@@ -100,7 +100,13 @@ class LocalPlayerProvider extends ChangeNotifier {
     if (_currentPath == null || _rootPath == null || _currentPath == _rootPath) return;
     final parentDir = Directory(_currentPath!).parent;
     if (parentDir.path != _currentPath) {
-      await navigateTo(parentDir.path);
+      // Directly update path and rescan without extra navigation logic
+      _currentPath = parentDir.path;
+      _isLoading = true;
+      notifyListeners();
+      await _scanCurrentDirectory();
+      _isLoading = false;
+      notifyListeners();
     }
   }
 

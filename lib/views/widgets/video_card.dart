@@ -15,6 +15,7 @@ import '../player/viewer_screen.dart';
 import '../creator/creator_profile_screen.dart';
 import 'playlist_selector_sheet.dart';
 import 'glassy_container.dart';
+import 'subscribe_button.dart';
 
 class VideoCard extends StatefulWidget {
   final GifInfo gif;
@@ -62,7 +63,8 @@ class _VideoCardState extends State<VideoCard> {
 
   void _startPreviewTimer() {
     _cleanupPreview();
-    _delayTimer = Timer(const Duration(milliseconds: 300), () {
+    // Use a shorter delay (100 ms) to trigger preview on a slight touch
+    _delayTimer = Timer(const Duration(milliseconds: 100), () {
       if (!mounted) return;
       _initializePreviewController();
     });
@@ -439,6 +441,7 @@ class _VideoCardState extends State<VideoCard> {
                                 const SizedBox(width: 2),
                                 const Icon(Icons.verified, size: 12, color: AppTheme.accentNeon),
                               ],
+                              SubscribeButton(creatorId: widget.gif.userName),
                             ],
                           ),
                         ),
