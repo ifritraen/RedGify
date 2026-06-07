@@ -23,6 +23,7 @@ import '../creator/creator_profile_screen.dart';
 import 'tag_results_screen.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import '../widgets/subscribe_button.dart';
+import '../widgets/favorite_category_selector_sheet.dart';
 
 
 class ReelsPlayerItem extends StatefulWidget {
@@ -820,6 +821,14 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
                     size: 16,
                     // label: '${widget.gif.likes}',
                     onTap: () => libraryProvider.toggleFavorite(widget.gif),
+                    onLongPress: () {
+                      showModalBottomSheet(
+                        context: context,
+                        backgroundColor: Colors.transparent,
+                        isScrollControlled: true,
+                        builder: (context) => FavoriteCategorySelectorSheet(gif: widget.gif),
+                      );
+                    },
                   ),
                   // const SizedBox(height: 16),
                   const SizedBox(height: 12),

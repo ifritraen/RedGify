@@ -16,6 +16,7 @@ import '../creator/creator_profile_screen.dart';
 import 'playlist_selector_sheet.dart';
 import 'glassy_container.dart';
 import 'subscribe_button.dart';
+import 'favorite_category_selector_sheet.dart';
 
 class VideoCard extends StatefulWidget {
   final GifInfo gif;
@@ -229,6 +230,15 @@ class _VideoCardState extends State<VideoCard> {
                       onTap: () {
                         Navigator.pop(context);
                         libraryProvider.toggleFavorite(widget.gif);
+                      },
+                      onLongPress: () {
+                        Navigator.pop(context);
+                        showModalBottomSheet(
+                          context: context,
+                          backgroundColor: Colors.transparent,
+                          isScrollControlled: true,
+                          builder: (context) => FavoriteCategorySelectorSheet(gif: widget.gif),
+                        );
                       },
                     ),
                     if (isFav)

@@ -5,6 +5,7 @@ class NeonVectorIcon extends StatelessWidget {
   final CustomPainter painter;
   final double size;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
   final String? label;
   final Color glowColor;
 
@@ -13,6 +14,7 @@ class NeonVectorIcon extends StatelessWidget {
     required this.painter,
     this.size = 28,
     this.onTap,
+    this.onLongPress,
     this.label,
     this.glowColor = AppTheme.primaryNeon,
   });
@@ -21,6 +23,7 @@ class NeonVectorIcon extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
+      onLongPress: onLongPress,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
