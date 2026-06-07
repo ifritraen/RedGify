@@ -50,7 +50,7 @@ class _VideoCardState extends State<VideoCard> {
     if (_previewController != null) {
       final controllerToDispose = _previewController;
       _previewController = null;
-      Future.microtask(() => controllerToDispose.dispose());
+      Future.microtask(() => controllerToDispose?.dispose());
     }
     if (mounted) {
       setState(() {
