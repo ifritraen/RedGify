@@ -29,7 +29,7 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
     _scrollController.addListener(() {
       final provider = Provider.of<CreatorProfileProvider>(context, listen: false);
       if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
-        provider.fetchNextCreatorGifsPage(widget.username);
+        provider.fetchNextPage(widget.username);
       }
     });
   }
@@ -40,10 +40,69 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
     super.dispose();
   }
 
+  Widget _buildTabSelector(CreatorProfileProvider provider) {
+    final isGifs = provider.activeTab == 'g';
+
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            _buildTabChip(
+              label: 'GIFs',
+              isActive: isGifs,
+              onTap: () => provider.selectTab('g', widget.username),
+            ),
+            const SizedBox(width: 12),
+            _buildTabChip(
+              label: 'Images',
+              isActive: !isGifs,
+              onTap: () => provider.selectTab('i', widget.username),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTabChip({required String label, required bool isActive, required VoidCallback onTap}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fallbackBg = isDark ? Colors.white.withAlpha(15) : Colors.black.withAlpha(10);
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: isActive 
+                ? AppTheme.primaryNeon.withAlpha(45) 
+                : fallbackBg,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isActive ? AppTheme.primaryNeon : Colors.transparent,
+              width: 1.0,
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isActive ? AppTheme.primaryNeon : (isDark ? Colors.white70 : AppTheme.textPrimaryLight),
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<CreatorProfileProvider>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeMedia = provider.activeMedia;
 
     return Scaffold(
       appBar: AppBar(
@@ -139,8 +198,11 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
                             ),
                           ),
 
+                          // Tab selector for GIFs / Images
+                          _buildTabSelector(provider),
+
                           // Media uploads grid
-                          if (provider.gifsError != null && provider.creatorGifs.isEmpty)
+                          if (provider.gifsError != null && activeMedia.isEmpty)
                             SliverFillRemaining(
                               child: Center(
                                 child: Text(
@@ -149,7 +211,7 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
                                 ),
                               ),
                             )
-                          else if (provider.creatorGifs.isEmpty && !provider.isLoadingGifs)
+                          else if (activeMedia.isEmpty && !provider.isLoadingGifs)
                             SliverFillRemaining(
                               child: Center(
                                 child: Text(
@@ -160,7 +222,7 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
                             )
                           else ...[
                             SliverPadding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              padding: const EdgeInsets.only(left: 16, right: 16, bottom: 84),
                               sliver: SliverGrid(
                                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
@@ -171,12 +233,12 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
                                 delegate: SliverChildBuilderDelegate(
                                   (context, index) {
                                     return VideoCard(
-                                      gif: provider.creatorGifs[index],
-                                      siblings: provider.creatorGifs,
+                                      gif: activeMedia[index],
+                                      siblings: activeMedia,
                                       index: index,
                                     );
                                   },
-                                  childCount: provider.creatorGifs.length,
+                                  childCount: activeMedia.length,
                                 ),
                               ),
                             ),

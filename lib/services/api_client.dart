@@ -177,9 +177,8 @@ class ApiClient {
   }
 
   // Fetch GIFs uploaded by a specific user (creator feed)
-  Future<Map<String, dynamic>> getUserGifs(String username, {int limit = 20, int page = 1, bool bypassCache = false}) async {
-    // final cacheKey = 'user_gifs_${username}_page_${page}_limit_${limit}';
-    final cacheKey = 'user_gifs_${username}_page_${page}_limit_$limit';
+  Future<Map<String, dynamic>> getUserGifs(String username, {String type = 'g', int limit = 20, int page = 1, bool bypassCache = false}) async {
+    final cacheKey = 'user_gifs_${username}_type_${type}_page_${page}_limit_$limit';
     if (!bypassCache) {
       final cached = await _isarService.readCache(cacheKey, maxAge: const Duration(minutes: 10));
       if (cached != null) {
@@ -187,8 +186,7 @@ class ApiClient {
       }
     }
 
-    // final url = '${ApiConstants.usersEndpoint}/$username/search?limit=$limit&page=$page';
-    final url = '${ApiConstants.usersEndpoint}/$username/search?count=$limit&page=$page';
+    final url = '${ApiConstants.usersEndpoint}/$username/search?count=$limit&page=$page&type=$type';
     final response = await get(url);
 
     if (response.statusCode == 200) {
