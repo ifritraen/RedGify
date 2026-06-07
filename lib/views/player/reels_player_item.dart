@@ -95,12 +95,31 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
       return;
     }
     
-    if (VideoCacheManager.isCached(widget.gif.id)) {
+    final mediaUrl = widget.gif.urls.hd.isNotEmpty ? widget.gif.urls.hd : widget.gif.urls.sd;
+    final bool isLocalFile = mediaUrl.startsWith('/') || mediaUrl.contains(':\\') || mediaUrl.contains(':/') || !mediaUrl.startsWith('http');
+
+    if (isLocalFile) {
+      _controller = VideoPlayerController.file(File(mediaUrl));
+    } else if (VideoCacheManager.isCached(widget.gif.id)) {
       final cachedPath = VideoCacheManager.getCachedPath(widget.gif.id)!;
       _controller = VideoPlayerController.file(File(cachedPath));
     } else {
-      final mediaUrl = widget.gif.urls.hd.isNotEmpty ? widget.gif.urls.hd : widget.gif.urls.sd;
-      _controller = VideoPlayerController.networkUrl(Uri.parse(mediaUrl));
+      // Check if downloaded locally via DownloadProvider
+      final downloadProvider = Provider.of<DownloadProvider>(context, listen: false);
+      DownloadedItem? downloaded;
+      try {
+        downloaded = downloadProvider.completedDownloads.firstWhere(
+          (x) => x.gif.id == widget.gif.id,
+        );
+      } catch (_) {
+        downloaded = null;
+      }
+
+      if (downloaded != null && downloaded.localPath.isNotEmpty && File(downloaded.localPath).existsSync()) {
+        _controller = VideoPlayerController.file(File(downloaded.localPath));
+      } else {
+        _controller = VideoPlayerController.networkUrl(Uri.parse(mediaUrl));
+      }
     }
 
     _controller!
@@ -365,7 +384,7 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
     required Color activeGlowColor,
     required VoidCallback onTap,
   }) {
-    final double size = 20;
+    final double size = 16;
     final iconColor = isActive ? activeGlowColor : Colors.white70;
     return GestureDetector(
       onTap: onTap,
@@ -373,8 +392,8 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: size + 20,
-            height: size + 20,
+            width: size + 12,
+            height: size + 12,
             decoration: BoxDecoration(
               color: Colors.black.withAlpha(90),
               shape: BoxShape.circle,
@@ -385,7 +404,7 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
               boxShadow: [
                 BoxShadow(
                   color: isActive ? activeGlowColor.withAlpha(80) : Colors.transparent,
-                  blurRadius: 8,
+                  blurRadius: 6,
                   spreadRadius: 0.5,
                 )
               ],
@@ -394,14 +413,14 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
               child: Icon(icon, color: iconColor, size: size),
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           Text(
             label,
             style: const TextStyle(
               color: Colors.white70,
-              fontSize: 10,
+              fontSize: 9,
               fontWeight: FontWeight.w500,
-              letterSpacing: 0.2,
+              letterSpacing: 0.1,
             ),
           ),
         ],
@@ -615,7 +634,7 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
                     painter: HeartPainter(filled: isFav, color: isFav ? AppTheme.primaryNeon : Colors.white70),
                     glowColor: AppTheme.primaryNeon,
                     // size: 26,
-                    size: 20,
+                    size: 16,
                     label: '${widget.gif.likes}',
                     onTap: () => libraryProvider.toggleFavorite(widget.gif),
                   ),
@@ -626,7 +645,7 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
                     painter: PlaylistPainter(color: Colors.white70),
                     glowColor: AppTheme.secondaryNeon,
                     // size: 26,
-                    size: 20,
+                    size: 16,
                     label: 'Save',
                     onTap: _showPlaylistSelector,
                   ),
@@ -637,12 +656,31 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
                     builder: (context, downloadProvider, child) {
                       final isDownloading = downloadProvider.isDownloading(widget.gif.id);
                       final progress = downloadProvider.getProgress(widget.gif.id);
+                      
+                      final mediaUrl = widget.gif.urls.hd.isNotEmpty ? widget.gif.urls.hd : widget.gif.urls.sd;
+                      final isLocalFile = mediaUrl.startsWith('/') || mediaUrl.contains(':\\') || mediaUrl.contains(':/') || !mediaUrl.startsWith('http');
+                      final isDownloadedLocal = isLocalFile || downloadProvider.completedDownloads.any((x) => x.gif.id == widget.gif.id && File(x.localPath).existsSync());
+
+                      if (isDownloadedLocal) {
+                        return NeonVectorIcon(
+                          painter: DownloadPainter(color: AppTheme.accentNeon),
+                          glowColor: AppTheme.accentNeon,
+                          size: 16,
+                          label: 'Saved',
+                          onTap: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Video is saved locally')),
+                            );
+                          },
+                        );
+                      }
+
                       return isDownloading
                           ? Column(
                               children: [
                                 SizedBox(
-                                  width: 28,
-                                  height: 28,
+                                  width: 24,
+                                  height: 24,
                                   child: CircularProgressIndicator(
                                     value: progress > 0 ? progress : null,
                                     strokeWidth: 2,
@@ -655,14 +693,14 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
                                   progress > 0
                                       ? '${(progress * 100).toStringAsFixed(0)}%'
                                       : '...',
-                                  style: const TextStyle(color: Colors.white, fontSize: 9),
+                                  style: const TextStyle(color: Colors.white, fontSize: 8),
                                 ),
                               ],
                             )
                           : NeonVectorIcon(
                               painter: DownloadPainter(color: Colors.white70),
                               glowColor: AppTheme.accentNeon,
-                              size: 20,
+                              size: 16,
                               label: 'Get',
                               onTap: () => downloadProvider.startDownload(context, widget.gif),
                             );
@@ -675,7 +713,7 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
                     painter: SharePainter(color: Colors.white70),
                     glowColor: Colors.white60,
                     // size: 26,
-                    size: 20,
+                    size: 16,
                     label: 'Share',
                     onTap: () {
                       final shareUrl = widget.gif.urls.html ?? 'https://www.redgifs.com/watch/${widget.gif.id}';

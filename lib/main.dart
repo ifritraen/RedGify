@@ -17,6 +17,9 @@ import 'config/theme.dart';
 import 'views/home/home_screen.dart';
 import 'views/widgets/inactivity_monitor.dart';
 
+import 'providers/local_player_provider.dart';
+import 'providers/personalized_feed_provider.dart';
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   VideoCacheManager.clearCacheOnStartup();
@@ -35,6 +38,8 @@ void main() {
         ChangeNotifierProvider(create: (_) => CreatorProfileProvider()),
         ChangeNotifierProvider(create: (_) => SelectionProvider()),
         ChangeNotifierProvider(create: (_) => ExploreProvider()),
+        ChangeNotifierProvider(create: (_) => LocalPlayerProvider()),
+        ChangeNotifierProvider(create: (_) => PersonalizedFeedProvider()),
       ],
       child: const MyApp(),
     ),

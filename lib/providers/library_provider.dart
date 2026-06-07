@@ -63,12 +63,14 @@ class LibraryProvider with ChangeNotifier {
   List<GifInfo> _favorites = [];
   List<Playlist> _playlists = [];
   List<GifInfo> _history = [];
+  List<String> _subscribedCreators = [];
   Map<String, List<String>> _favoriteCategoryMappings = {};
   bool _isInitialized = false;
 
   List<GifInfo> get favorites => _favorites;
   List<Playlist> get playlists => _playlists;
   List<GifInfo> get history => _history;
+  List<String> get subscribedCreators => _subscribedCreators;
   Map<String, List<String>> get favoriteCategoryMappings => _favoriteCategoryMappings;
   List<String> get favoriteCategories => _favoriteCategoryMappings.keys.toList();
   bool get isInitialized => _isInitialized;
@@ -91,6 +93,15 @@ class LibraryProvider with ChangeNotifier {
         _favoriteCategoryMappings = {};
       }
 
+      // Load subscribed creators
+      final subStr = await _secureStorage.read(key: 'subscribed_creators');
+      if (subStr != null) {
+        final decoded = jsonDecode(subStr) as List;
+        _subscribedCreators = decoded.map((v) => v.toString()).toList();
+      } else {
+        _subscribedCreators = [];
+      }
+
       final rawPlaylists = await _isarService.getPlaylists();
       _playlists = [];
       for (var rp in rawPlaylists) {
@@ -106,6 +117,29 @@ class LibraryProvider with ChangeNotifier {
     } catch (_) {}
     _isInitialized = true;
     notifyListeners();
+  }
+
+  // Creator Subscriptions
+  bool isSubscribed(String username) {
+    return _subscribedCreators.contains(username.trim().toLowerCase());
+  }
+
+  Future<void> subscribeCreator(String username) async {
+    final name = username.trim().toLowerCase();
+    if (name.isNotEmpty && !_subscribedCreators.contains(name)) {
+      _subscribedCreators.add(name);
+      await _secureStorage.write(key: 'subscribed_creators', value: jsonEncode(_subscribedCreators));
+      notifyListeners();
+    }
+  }
+
+  Future<void> unsubscribeCreator(String username) async {
+    final name = username.trim().toLowerCase();
+    if (_subscribedCreators.contains(name)) {
+      _subscribedCreators.remove(name);
+      await _secureStorage.write(key: 'subscribed_creators', value: jsonEncode(_subscribedCreators));
+      notifyListeners();
+    }
   }
 
   // Check if a Gif is favorited

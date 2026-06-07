@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../providers/creator_profile_provider.dart';
+import '../../providers/library_provider.dart';
 import '../../config/theme.dart';
 import '../widgets/video_card.dart';
 import '../widgets/bulk_action_bar.dart';
@@ -181,18 +183,64 @@ class _CreatorProfileScreenState extends State<CreatorProfileScreen> {
                                     '@${widget.username}',
                                     style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
                                   ),
-                                  const SizedBox(height: 16),
-                                  Divider(color: AppTheme.border),
-                                  const SizedBox(height: 12),
-                                  // Profile stats count
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                    children: [
-                                      _buildStatColumn('Followers', '${provider.userInfo?.followers ?? 0}'),
-                                      Container(width: 1, height: 24, color: AppTheme.border),
-                                      _buildStatColumn('Views', '${provider.userInfo?.views ?? 0}'),
-                                    ],
-                                  ),
+                                   const SizedBox(height: 16),
+                                   Divider(color: AppTheme.border),
+                                   const SizedBox(height: 12),
+                                   // Profile stats count
+                                   Row(
+                                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                     children: [
+                                       _buildStatColumn('Followers', '${provider.userInfo?.followers ?? 0}'),
+                                       Container(width: 1, height: 24, color: AppTheme.border),
+                                       _buildStatColumn('Views', '${provider.userInfo?.views ?? 0}'),
+                                     ],
+                                   ),
+                                   const SizedBox(height: 16),
+                                   Consumer<LibraryProvider>(
+                                     builder: (context, libProvider, child) {
+                                       final isSubscribed = libProvider.isSubscribed(widget.username);
+                                       return SizedBox(
+                                         width: double.infinity,
+                                         child: ElevatedButton.icon(
+                                           style: ElevatedButton.styleFrom(
+                                             backgroundColor: isSubscribed 
+                                                 ? Colors.white.withAlpha(20)
+                                                 : AppTheme.primaryNeon,
+                                             foregroundColor: Colors.white,
+                                             side: BorderSide(
+                                               color: isSubscribed 
+                                                   ? AppTheme.primaryNeon.withAlpha(100) 
+                                                   : Colors.transparent
+                                             ),
+                                             shape: RoundedRectangleBorder(
+                                               borderRadius: BorderRadius.circular(16),
+                                             ),
+                                             padding: const EdgeInsets.symmetric(vertical: 12),
+                                           ),
+                                           icon: Icon(
+                                             isSubscribed ? Icons.notifications_active_outlined : Icons.notifications_none_outlined,
+                                             size: 18,
+                                             color: isSubscribed ? AppTheme.primaryNeon : Colors.white,
+                                           ),
+                                           label: Text(
+                                             isSubscribed ? 'SUBSCRIBED' : 'SUBSCRIBE',
+                                             style: GoogleFonts.outfit(
+                                               fontWeight: FontWeight.bold,
+                                               letterSpacing: 1.0,
+                                               color: Colors.white,
+                                             ),
+                                           ),
+                                           onPressed: () {
+                                             if (isSubscribed) {
+                                               libProvider.unsubscribeCreator(widget.username);
+                                             } else {
+                                               libProvider.subscribeCreator(widget.username);
+                                             }
+                                           },
+                                         ),
+                                       );
+                                     },
+                                   ),
                                 ],
                               ),
                             ),

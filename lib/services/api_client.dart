@@ -37,9 +37,8 @@ class ApiClient {
   }
 
   // Fetch search results (cache for short periods e.g. 5 minutes)
-  Future<Map<String, dynamic>> searchGifs(String query, {int limit = 20, int page = 1, bool bypassCache = false}) async {
-    // final cacheKey = 'search_${query}_page_${page}_limit_${limit}';
-    final cacheKey = 'search_${query}_page_${page}_limit_$limit';
+  Future<Map<String, dynamic>> searchGifs(String query, {String type = 'g', int limit = 20, int page = 1, String order = 'score', bool bypassCache = false}) async {
+    final cacheKey = 'search_${query}_type_${type}_order_${order}_page_${page}_limit_$limit';
     if (!bypassCache) {
       final cached = await _isarService.readCache(cacheKey, maxAge: const Duration(minutes: 5));
       if (cached != null) {
@@ -47,8 +46,7 @@ class ApiClient {
       }
     }
 
-    // final url = '${ApiConstants.searchEndpoint}?search_text=${Uri.encodeComponent(query)}&limit=$limit&page=$page';
-    final url = '${ApiConstants.searchEndpoint}?search_text=${Uri.encodeComponent(query)}&count=$limit&page=$page&order=trending';
+    final url = '${ApiConstants.searchEndpoint}?query=${Uri.encodeComponent(query)}&type=$type&count=$limit&page=$page&order=$order';
     final response = await get(url);
 
     if (response.statusCode == 200) {
@@ -56,6 +54,47 @@ class ApiClient {
       return jsonDecode(response.body) as Map<String, dynamic>;
     } else {
       throw Exception('Failed to query search: ${response.statusCode}');
+    }
+  }
+
+  // Fetch real-time tag/search suggestions
+  Future<List<dynamic>> getSearchSuggestions(String query) async {
+    if (query.trim().isEmpty) return [];
+    
+    final url = '${ApiConstants.baseUrl}/search/suggest?query=${Uri.encodeComponent(query)}';
+    final response = await get(url);
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data is List) {
+        return data;
+      } else if (data is Map && data.containsKey('data')) {
+        return data['data'] as List? ?? [];
+      }
+      return [];
+    } else {
+      throw Exception('Failed to get suggestions: ${response.statusCode}');
+    }
+  }
+
+  // Fetch niches search results
+  Future<Map<String, dynamic>> searchNiches(String query, {int limit = 20, int page = 1, bool bypassCache = false}) async {
+    final cacheKey = 'search_niches_${query}_page_${page}_limit_$limit';
+    if (!bypassCache) {
+      final cached = await _isarService.readCache(cacheKey, maxAge: const Duration(minutes: 10));
+      if (cached != null) {
+        return jsonDecode(cached) as Map<String, dynamic>;
+      }
+    }
+
+    final url = '${ApiConstants.baseUrl}/niches/search?order=best_match&count=$limit&page=$page&query=${Uri.encodeComponent(query)}';
+    final response = await get(url);
+
+    if (response.statusCode == 200) {
+      await _isarService.writeCache(cacheKey, response.body);
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    } else {
+      throw Exception('Failed to search niches: ${response.statusCode}');
     }
   }
 
@@ -231,14 +270,14 @@ class ApiClient {
 
   // Fetch creator search results
   Future<Map<String, dynamic>> searchCreators({
+    String? query,
     int limit = 20,
     int page = 1,
     String order = 'trending',
     String? time,
     bool bypassCache = false,
   }) async {
-    // final cacheKey = 'creators_${order}_${time ?? "all"}_page_${page}_limit_${limit}';
-    final cacheKey = 'creators_${order}_${time ?? "all"}_page_${page}_limit_$limit';
+    final cacheKey = 'creators_${query ?? ""}_${order}_${time ?? "all"}_page_${page}_limit_$limit';
     if (!bypassCache) {
       final cached = await _isarService.readCache(cacheKey, maxAge: const Duration(minutes: 10));
       if (cached != null) {
@@ -246,7 +285,12 @@ class ApiClient {
       }
     }
 
-    var url = '${ApiConstants.baseUrl}/creators/search?order=$order&count=$limit&page=$page&verified=y';
+    var url = '${ApiConstants.baseUrl}/creators/search?order=$order&count=$limit&page=$page';
+    if (query != null && query.isNotEmpty) {
+      url += '&query=${Uri.encodeComponent(query)}';
+    } else {
+      url += '&verified=y';
+    }
     if (time != null) {
       url += '&time=$time';
     }

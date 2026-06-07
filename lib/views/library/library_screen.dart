@@ -9,6 +9,7 @@ import '../widgets/video_card.dart';
 import '../widgets/bulk_action_bar.dart';
 import '../widgets/glassy_container.dart';
 import '../../providers/download_provider.dart';
+import '../creator/creator_profile_screen.dart';
 
 class LibraryScreen extends StatefulWidget {
   const LibraryScreen({super.key});
@@ -24,7 +25,7 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
   }
 
   void _showCreateCategoryDialog(BuildContext context, LibraryProvider provider) {
@@ -175,6 +176,7 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
                     Tab(text: 'Playlists'),
                     Tab(text: 'History'),
                     Tab(text: 'Downloads'),
+                    Tab(text: 'Subscriptions'),
                   ],
                 ),
               ),
@@ -623,6 +625,93 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
                       child: SizedBox.shrink(),
                     ),
                 ],
+              );
+            },
+          ),
+
+          // Subscriptions Tab
+          Builder(
+            builder: (context) {
+              final isDark = Theme.of(context).brightness == Brightness.dark;
+              final textColor = isDark ? Colors.white : AppTheme.textPrimaryLight;
+              
+              if (provider.subscribedCreators.isEmpty) {
+                return Center(
+                  child: Text(
+                    'No subscribed creators yet.',
+                    style: TextStyle(color: AppTheme.textSecondary),
+                  ),
+                );
+              }
+              
+              return GridView.builder(
+                padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 84),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: MediaQuery.of(context).size.width > 600 ? 4 : 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 1.1,
+                ),
+                itemCount: provider.subscribedCreators.length,
+                itemBuilder: (context, index) {
+                  final creatorName = provider.subscribedCreators[index];
+                  return GlassyContainer(
+                    color: AppTheme.cardBg,
+                    borderColor: AppTheme.border,
+                    borderRadius: 16,
+                    padding: const EdgeInsets.all(12),
+                    child: InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CreatorProfileScreen(username: creatorName),
+                          ),
+                        );
+                      },
+                      child: Stack(
+                        children: [
+                          Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                CircleAvatar(
+                                  radius: 28,
+                                  backgroundColor: AppTheme.primaryNeon.withAlpha(50),
+                                  child: const Icon(Icons.person, size: 28, color: AppTheme.primaryNeon),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  '@$creatorName',
+                                  style: GoogleFonts.outfit(
+                                    color: textColor,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Positioned(
+                            top: 0,
+                            right: 0,
+                            child: IconButton(
+                              icon: const Icon(Icons.close, size: 18, color: Colors.redAccent),
+                              onPressed: () {
+                                provider.unsubscribeCreator(creatorName);
+                              },
+                              constraints: const BoxConstraints(),
+                              padding: EdgeInsets.zero,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               );
             },
           ),
