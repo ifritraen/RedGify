@@ -235,126 +235,141 @@ class VideoCard extends StatelessWidget {
             _showContextSheet(context, selectionProvider, libraryProvider);
           }
         },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Stack(
           children: [
             // Poster/Thumbnail Image
-            Stack(
-              children: [
-                AspectRatio(
-                  aspectRatio: gif.width / (gif.height > 0 ? gif.height : 1),
-                  child: Image.network(
-                    gif.urls.poster ?? gif.urls.thumbnail ?? '',
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Shimmer.fromColors(
-                        baseColor: isDark ? const Color(0xFF1E1A2E) : const Color(0xFFE5E2F0),
-                        highlightColor: isDark ? const Color(0xFF2E264D) : const Color(0xFFF3F1FA),
-                        child: Container(color: Colors.black),
-                      );
-                    },
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: isDark ? const Color(0xFF1E1A2E) : const Color(0xFFE5E2F0),
-                        child: Center(
-                          child: Icon(Icons.broken_image, color: isDark ? Colors.white30 : Colors.black26),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                if (selectionProvider.isSelectionMode)
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        color: Colors.black54,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        isSelected
-                            ? Icons.check_circle
-                            : Icons.radio_button_unchecked,
-                        color: isSelected
-                            ? AppTheme.primaryNeon
-                            : Colors.white70,
-                        size: 26,
-                      ),
+            AspectRatio(
+              aspectRatio: gif.width / (gif.height > 0 ? gif.height : 1),
+              child: Image.network(
+                gif.urls.poster ?? gif.urls.thumbnail ?? '',
+                fit: BoxFit.cover,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Shimmer.fromColors(
+                    baseColor: isDark ? const Color(0xFF1E1A2E) : const Color(0xFFE5E2F0),
+                    highlightColor: isDark ? const Color(0xFF2E264D) : const Color(0xFFF3F1FA),
+                    child: Container(color: Colors.black),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: isDark ? const Color(0xFF1E1A2E) : const Color(0xFFE5E2F0),
+                    child: Center(
+                      child: Icon(Icons.broken_image, color: isDark ? Colors.white30 : Colors.black26),
                     ),
-                  ),
-              ],
-            ),
-            // User and details info
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      if (selectionProvider.isSelectionMode) {
-                        selectionProvider.toggleSelection(gif);
-                      } else {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CreatorProfileScreen(username: gif.userName),
-                          ),
-                        );
-                      }
-                    },
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            '@${gif.userName}',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: AppTheme.textPrimary.withOpacity(0.9),
-                                ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (gif.verified)
-                          const Icon(Icons.verified, size: 14, color: AppTheme.accentNeon),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  // Video duration tag
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withAlpha(128),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          '${gif.duration.toStringAsFixed(1)}s',
-                          style: const TextStyle(fontSize: 10, color: Colors.white),
-                        ),
-                      ),
-                      // Views tag
-                      Row(
-                        children: [
-                          Icon(Icons.remove_red_eye, size: 12, color: AppTheme.textSecondary.withOpacity(0.6)),
-                          const SizedBox(width: 3),
-                          Text(
-                            '${gif.views}',
-                            style: TextStyle(fontSize: 10, color: AppTheme.textSecondary.withOpacity(0.8)),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
+                  );
+                },
               ),
             ),
+
+            // Bottom overlay with black gradient shadow for text readability
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.8),
+                    ],
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Left side: Username + Verified status
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          if (selectionProvider.isSelectionMode) {
+                            selectionProvider.toggleSelection(gif);
+                          } else {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => CreatorProfileScreen(username: gif.userName),
+                              ),
+                            );
+                          }
+                        },
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                '@${gif.userName}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (gif.verified) ...[
+                              const SizedBox(width: 2),
+                              const Icon(Icons.verified, size: 12, color: AppTheme.accentNeon),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    // Right side: Views and duration tag
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.remove_red_eye, size: 10, color: Colors.white.withOpacity(0.8)),
+                        const SizedBox(width: 2),
+                        Text(
+                          '${gif.views}',
+                          style: TextStyle(fontSize: 9, color: Colors.white.withOpacity(0.8)),
+                        ),
+                        const SizedBox(width: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withAlpha(128),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            '${gif.duration.toStringAsFixed(1)}s',
+                            style: const TextStyle(fontSize: 9, color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            if (selectionProvider.isSelectionMode)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.black54,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    isSelected
+                        ? Icons.check_circle
+                        : Icons.radio_button_unchecked,
+                    color: isSelected
+                        ? AppTheme.primaryNeon
+                        : Colors.white70,
+                    size: 26,
+                  ),
+                ),
+              ),
           ],
         ),
       ),

@@ -17,6 +17,7 @@ import '../widgets/playlist_selector_sheet.dart';
 import '../widgets/neon_vector_buttons.dart';
 import '../creator/creator_profile_screen.dart';
 import 'tag_results_screen.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 class ReelsPlayerItem extends StatefulWidget {
   final GifInfo gif;
@@ -150,6 +151,11 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
 
       if (widget.isActive) {
         InactivityMonitor.isAnyVideoPlaying = value.isPlaying;
+        if (value.isPlaying) {
+          WakelockPlus.enable();
+        } else {
+          WakelockPlus.disable();
+        }
       }
 
       if (value.position >= value.duration && !value.isPlaying && !_isCompleted) {
@@ -178,6 +184,7 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
         if (!_isImg && _controller != null && _initialized) {
           _controller!.pause();
         }
+        WakelockPlus.disable();
       }
     }
   }
@@ -191,6 +198,7 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
     }
     if (widget.isActive) {
       InactivityMonitor.isAnyVideoPlaying = false;
+      WakelockPlus.disable();
     }
     super.dispose();
   }
