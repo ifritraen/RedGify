@@ -35,79 +35,9 @@ class VideoCard extends StatefulWidget {
 }
 
 class _VideoCardState extends State<VideoCard> {
-  VideoPlayerController? _previewController;
-  Timer? _delayTimer;
-  bool _showPreview = false;
-  bool _isLoadingPreview = false;
-
   @override
   void dispose() {
-    _cleanupPreview();
     super.dispose();
-  }
-
-  void _cleanupPreview() {
-    _delayTimer?.cancel();
-    _delayTimer = null;
-    if (_previewController != null) {
-      final controllerToDispose = _previewController;
-      _previewController = null;
-      Future.microtask(() => controllerToDispose?.dispose());
-    }
-    if (mounted) {
-      setState(() {
-        _showPreview = false;
-        _isLoadingPreview = false;
-      });
-    }
-  }
-
-  void _startPreviewTimer() {
-    _cleanupPreview();
-    // Use a shorter delay (100 ms) to trigger preview on a slight touch
-    _delayTimer = Timer(const Duration(milliseconds: 100), () {
-      if (!mounted) return;
-      _initializePreviewController();
-    });
-  }
-
-  void _initializePreviewController() {
-    final mediaUrl = widget.gif.urls.sd.isNotEmpty ? widget.gif.urls.sd : widget.gif.urls.hd;
-    if (mediaUrl.isEmpty) return;
-
-    final bool isLocalFile = mediaUrl.startsWith('/') || mediaUrl.contains(':\\') || mediaUrl.contains(':/') || !mediaUrl.startsWith('http');
-
-    setState(() {
-      _isLoadingPreview = true;
-    });
-
-    if (isLocalFile) {
-      _previewController = VideoPlayerController.file(File(mediaUrl));
-    } else {
-      _previewController = VideoPlayerController.networkUrl(
-        Uri.parse(mediaUrl),
-        httpHeaders: const {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Referer': 'https://www.redgifs.com/',
-        },
-      );
-    }
-
-    _previewController!.initialize().then((_) {
-      if (!mounted || _previewController == null) {
-        _cleanupPreview();
-        return;
-      }
-      _previewController!.setVolume(0); // Mute preview
-      _previewController!.setLooping(true);
-      _previewController!.play();
-      setState(() {
-        _isLoadingPreview = false;
-        _showPreview = true;
-      });
-    }).catchError((_) {
-      _cleanupPreview();
-    });
   }
 
   void _showCategorySelectionDialog(BuildContext context, LibraryProvider libraryProvider) {
@@ -198,10 +128,66 @@ class _VideoCardState extends State<VideoCard> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      child: Text(
-                        '@${widget.gif.userName}\'s video',
-                        style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 16),
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            widget.gif.title,
+                            style: TextStyle(
+                              color: textColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 12,
+                            runSpacing: 4,
+                            children: [
+                              Text(
+                                '@${widget.gif.userName}',
+                                style: const TextStyle(
+                                  color: AppTheme.primaryNeon,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              Text(
+                                '${widget.gif.duration.toStringAsFixed(1)}s',
+                                style: TextStyle(color: iconColor, fontSize: 12),
+                              ),
+                              Text(
+                                '${widget.gif.width}x${widget.gif.height}',
+                                style: TextStyle(color: iconColor, fontSize: 12),
+                              ),
+                              Text(
+                                '${widget.gif.views} views',
+                                style: TextStyle(color: iconColor, fontSize: 12),
+                              ),
+                              Text(
+                                '${widget.gif.likes} likes',
+                                style: TextStyle(color: iconColor, fontSize: 12),
+                              ),
+                            ],
+                          ),
+                          if (widget.gif.tags.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              'Tags: ${widget.gif.tags.join(', ')}',
+                              style: TextStyle(
+                                color: iconColor.withOpacity(0.8),
+                                fontSize: 11,
+                                fontStyle: FontStyle.italic,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                     Divider(color: borderColor, height: 1),
@@ -305,17 +291,7 @@ class _VideoCardState extends State<VideoCard> {
         )
       ],
       child: GestureDetector(
-        onTapDown: (_) {
-          _startPreviewTimer();
-        },
-        onTapUp: (_) {
-          _cleanupPreview();
-        },
-        onTapCancel: () {
-          _cleanupPreview();
-        },
         onTap: () async {
-          _cleanupPreview();
           if (selectionProvider.isSelectionMode) {
             selectionProvider.toggleSelection(widget.gif);
           } else {
@@ -334,7 +310,6 @@ class _VideoCardState extends State<VideoCard> {
           }
         },
         onLongPress: () {
-          _cleanupPreview();
           if (selectionProvider.isSelectionMode) {
             selectionProvider.toggleSelection(widget.gif);
           } else {
@@ -344,56 +319,27 @@ class _VideoCardState extends State<VideoCard> {
         child: SizedBox.expand(
           child: Stack(
             children: [
-              // Poster/Thumbnail Image + Video Preview
+              // Poster/Thumbnail Image
               Positioned.fill(
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Image.network(
-                      widget.gif.urls.poster ?? widget.gif.urls.thumbnail ?? '',
-                      fit: BoxFit.cover,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Shimmer.fromColors(
-                          baseColor: isDark ? const Color(0xFF1E1A2E) : const Color(0xFFE5E2F0),
-                          highlightColor: isDark ? const Color(0xFF2E264D) : const Color(0xFFF3F1FA),
-                          child: Container(color: Colors.black),
-                        );
-                      },
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: isDark ? const Color(0xFF1E1A2E) : const Color(0xFFE5E2F0),
-                          child: Center(
-                            child: Icon(Icons.broken_image, color: isDark ? Colors.white30 : Colors.black26),
-                          ),
-                        );
-                      },
-                    ),
-                    if (_showPreview && _previewController != null && _previewController!.value.isInitialized)
-                      Positioned.fill(
-                        child: FittedBox(
-                          fit: BoxFit.cover,
-                          child: SizedBox(
-                            width: _previewController!.value.size.width,
-                            height: _previewController!.value.size.height,
-                            child: VideoPlayer(_previewController!),
-                          ),
-                        ),
+                child: Image.network(
+                  widget.gif.urls.poster ?? widget.gif.urls.thumbnail ?? '',
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Shimmer.fromColors(
+                      baseColor: isDark ? const Color(0xFF1E1A2E) : const Color(0xFFE5E2F0),
+                      highlightColor: isDark ? const Color(0xFF2E264D) : const Color(0xFFF3F1FA),
+                      child: Container(color: Colors.black),
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      color: isDark ? const Color(0xFF1E1A2E) : const Color(0xFFE5E2F0),
+                      child: Center(
+                        child: Icon(Icons.broken_image, color: isDark ? Colors.white30 : Colors.black26),
                       ),
-                    if (_isLoadingPreview)
-                      Positioned(
-                        top: 8,
-                        left: 8,
-                        child: SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 1.5,
-                            color: AppTheme.primaryNeon,
-                          ),
-                        ),
-                      ),
-                  ],
+                    );
+                  },
                 ),
               ),
   
@@ -423,7 +369,6 @@ class _VideoCardState extends State<VideoCard> {
                           onTap: (widget.gif.userName.isEmpty || widget.gif.userName.toLowerCase() == 'anonymous')
                               ? null
                               : () {
-                                  _cleanupPreview();
                                   if (selectionProvider.isSelectionMode) {
                                     selectionProvider.toggleSelection(widget.gif);
                                   } else {

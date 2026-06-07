@@ -107,7 +107,7 @@ class _TagResultsScreenState extends State<TagResultsScreen> {
                               crossAxisCount: Provider.of<PlaybackSettingsProvider>(context).gridColumns,
                               crossAxisSpacing: 4,
                               mainAxisSpacing: 4,
-                              childAspectRatio: Provider.of<PlaybackSettingsProvider>(context).gridColumns == 1 ? 1.4 : 0.70,
+                              childAspectRatio: 0.70,
                             ),
                             delegate: SliverChildBuilderDelegate(
                               (context, index) {

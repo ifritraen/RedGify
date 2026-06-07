@@ -329,7 +329,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                 crossAxisCount: Provider.of<PlaybackSettingsProvider>(context).gridColumns,
                 crossAxisSpacing: 4,
                 mainAxisSpacing: 4,
-                childAspectRatio: Provider.of<PlaybackSettingsProvider>(context).gridColumns == 1 ? 1.4 : 0.70,
+                childAspectRatio: 0.70,
               ),
               itemCount: search.gifResults.take(4).length,
               itemBuilder: (context, index) {
@@ -366,7 +366,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                 crossAxisCount: Provider.of<PlaybackSettingsProvider>(context).gridColumns,
                 crossAxisSpacing: 4,
                 mainAxisSpacing: 4,
-                childAspectRatio: Provider.of<PlaybackSettingsProvider>(context).gridColumns == 1 ? 1.4 : 0.70,
+                childAspectRatio: 0.70,
               ),
               itemCount: search.imageResults.take(4).length,
               itemBuilder: (context, index) {
@@ -419,7 +419,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                 crossAxisCount: Provider.of<PlaybackSettingsProvider>(context).gridColumns,
                 crossAxisSpacing: 4,
                 mainAxisSpacing: 4,
-                childAspectRatio: Provider.of<PlaybackSettingsProvider>(context).gridColumns == 1 ? 1.4 : 0.70,
+                childAspectRatio: 0.70,
               ),
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
@@ -473,7 +473,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                 crossAxisCount: Provider.of<PlaybackSettingsProvider>(context).gridColumns,
                 crossAxisSpacing: 4,
                 mainAxisSpacing: 4,
-                childAspectRatio: Provider.of<PlaybackSettingsProvider>(context).gridColumns == 1 ? 1.4 : 0.70,
+                childAspectRatio: 0.70,
               ),
               delegate: SliverChildBuilderDelegate(
                 (context, index) {

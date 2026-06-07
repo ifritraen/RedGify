@@ -64,7 +64,7 @@ class SidebarDrawer extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(24),
               child: Text(
-                'v1.0.5 (Premium Build)',
+                'v1.0.6 (Premium Build)',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppTheme.textSecondary.withAlpha(128),
                     ),

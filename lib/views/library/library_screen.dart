@@ -377,7 +377,7 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
                               crossAxisCount: Provider.of<PlaybackSettingsProvider>(context).gridColumns,
                               crossAxisSpacing: 4,
                               mainAxisSpacing: 4,
-                              childAspectRatio: Provider.of<PlaybackSettingsProvider>(context).gridColumns == 1 ? 1.4 : 0.70,
+                              childAspectRatio: 0.70,
                             ),
                             itemCount: filteredFavorites.length,
                             itemBuilder: (context, index) {
@@ -514,7 +514,7 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
                           crossAxisCount: Provider.of<PlaybackSettingsProvider>(context).gridColumns,
                           crossAxisSpacing: 4,
                           mainAxisSpacing: 4,
-                          childAspectRatio: Provider.of<PlaybackSettingsProvider>(context).gridColumns == 1 ? 1.4 : 0.70,
+                          childAspectRatio: 0.70,
                         ),
                         itemCount: provider.history.length,
                         itemBuilder: (context, index) {
@@ -647,7 +647,7 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
                           crossAxisCount: Provider.of<PlaybackSettingsProvider>(context).gridColumns,
                           crossAxisSpacing: 4,
                           mainAxisSpacing: 4,
-                          childAspectRatio: Provider.of<PlaybackSettingsProvider>(context).gridColumns == 1 ? 1.4 : 0.70,
+                          childAspectRatio: 0.70,
                         ),
                         itemCount: completed.length,
                         itemBuilder: (context, index) {
@@ -708,7 +708,7 @@ class PlaylistDetailScreen extends StatelessWidget {
                     crossAxisCount: Provider.of<PlaybackSettingsProvider>(context).gridColumns,
                     crossAxisSpacing: 4,
                     mainAxisSpacing: 4,
-                    childAspectRatio: Provider.of<PlaybackSettingsProvider>(context).gridColumns == 1 ? 1.4 : 0.70,
+                    childAspectRatio: 0.70,
                   ),
                   itemCount: playlist.items.length,
                   itemBuilder: (context, index) {

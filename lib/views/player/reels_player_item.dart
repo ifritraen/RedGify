@@ -238,10 +238,30 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
     }
   }
 
+  void _disposePlayer() {
+    if (_controller != null) {
+      _controller!.removeListener(_onControllerUpdate);
+      _controller!.dispose();
+      _controller = null;
+    }
+  }
+
   @override
   void didUpdateWidget(covariant ReelsPlayerItem oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.isActive != oldWidget.isActive) {
+    if (widget.gif.id != oldWidget.gif.id) {
+      _disposePlayer();
+      _initialized = false;
+      _initError = false;
+      _currentPlayCount = 0;
+      _isCompleted = false;
+      _currentPositionMs = 0.0;
+      _durationMs = 1.0;
+      if (widget.isActive) {
+        _initializePlayer();
+        _addToHistory();
+      }
+    } else if (widget.isActive != oldWidget.isActive) {
       if (widget.isActive) {
         _currentPlayCount = 0;
         _isCompleted = false;
@@ -268,10 +288,7 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
     try {
       Provider.of<DownloadProvider>(context, listen: false).removeListener(_onDownloadsLoaded);
     } catch (_) {}
-    if (_controller != null) {
-      _controller!.removeListener(_onControllerUpdate);
-      _controller!.dispose();
-    }
+    _disposePlayer();
     if (widget.isActive) {
       InactivityMonitor.isAnyVideoPlaying = false;
       WakelockPlus.disable();

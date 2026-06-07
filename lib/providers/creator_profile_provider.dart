@@ -52,6 +52,11 @@ class CreatorProfileProvider with ChangeNotifier {
 
   // Load creator profile data and reset both tabs
   Future<void> loadCreatorProfile(String username, {bool bypassCache = false}) async {
+    var cleanUsername = username.trim();
+    if (cleanUsername.startsWith('@')) {
+      cleanUsername = cleanUsername.substring(1);
+    }
+
     _userInfo = null;
     _profileError = null;
     _isLoadingProfile = true;
@@ -71,11 +76,11 @@ class CreatorProfileProvider with ChangeNotifier {
 
     try {
       if (bypassCache) {
-        await IsarService().clearCachePrefix('user_gifs_${username}_type_');
-        await IsarService().clearCachePrefix('user_profile_$username');
+        await IsarService().clearCachePrefix('user_gifs_${cleanUsername}_type_');
+        await IsarService().clearCachePrefix('user_profile_$cleanUsername');
       }
 
-      final data = await _apiClient.getUserProfile(username, bypassCache: bypassCache);
+      final data = await _apiClient.getUserProfile(cleanUsername, bypassCache: bypassCache);
       // final rawUser = data['user'] as Map<String, dynamic>? ?? data;
       final Map<String, dynamic> rawUser;
       if (data.containsKey('user')) {
@@ -90,7 +95,7 @@ class CreatorProfileProvider with ChangeNotifier {
       notifyListeners();
 
       // Trigger initial page load for active tab (gifs)
-      await fetchNextPage(username, bypassCache: bypassCache);
+      await fetchNextPage(cleanUsername, bypassCache: bypassCache);
     } catch (e) {
       _profileError = e.toString();
       _isLoadingProfile = false;
@@ -100,6 +105,11 @@ class CreatorProfileProvider with ChangeNotifier {
 
   // Fetch next page of content for the active tab
   Future<void> fetchNextPage(String username, {bool bypassCache = false}) async {
+    var cleanUsername = username.trim();
+    if (cleanUsername.startsWith('@')) {
+      cleanUsername = cleanUsername.substring(1);
+    }
+
     final isGifs = _activeTab == 'g';
     final hasMore = isGifs ? _hasMoreGifs : _hasMoreImages;
     if (_isLoadingGifs || !hasMore) return;
@@ -110,7 +120,7 @@ class CreatorProfileProvider with ChangeNotifier {
 
     try {
       final page = isGifs ? _gifsPage : _imagesPage;
-      final data = await _apiClient.getUserGifs(username, type: _activeTab, page: page, bypassCache: bypassCache);
+      final data = await _apiClient.getUserGifs(cleanUsername, type: _activeTab, page: page, bypassCache: bypassCache);
       final rawGifs = data['gifs'] as List? ?? [];
       final newGifs = rawGifs.map((g) => GifInfo.fromJson(g)).toList();
 
