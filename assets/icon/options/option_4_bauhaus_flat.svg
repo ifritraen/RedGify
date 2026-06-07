@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <rect width="512" height="512" rx="140" fill="#FFFFFF" />
+  <!-- Crisp Light Cream Card Background -->
+  <rect x="76" y="76" width="360" height="360" rx="90" fill="#FAFAF6" stroke="#EAEAE3" stroke-width="2" />
+
+  <g transform="translate(60, 40)">
+    <!-- 1. Yellow Circle (represents background loop) -->
+    <circle cx="270" cy="200" r="90" fill="#FFE066" />
+
+    <!-- 2. Pink Triangle (Play button shape overlay) -->
+    <path d="M 170,110 L 330,200 L 170,290 Z" fill="#FF6B9D" />
+
+    <!-- 3. Light Blue Bar (R Stem overlay) -->
+    <rect x="140" y="110" width="50" height="250" rx="10" fill="#33CCFF" />
+
+    <!-- 4. Overlapping accent: White thin lines for Swiss layout look -->
+    <line x1="140" y1="110" x2="350" y2="110" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" />
+    <line x1="140" y1="200" x2="350" y2="200" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" />
+  </g>
+</svg>

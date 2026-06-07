@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Strong Neon Glow Filters -->
+    <filter id="neonPink" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="neonBlue" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="neonYellow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" rx="140" fill="#FFFFFF" />
+  <!-- Dark futuristic card background for contrast -->
+  <rect x="76" y="76" width="360" height="360" rx="90" fill="#0D0B1E" />
+
+  <g transform="translate(130, 110)">
+    <!-- Kickstand: Neon Yellow -->
+    <path d="M 100 170 L 190 280" stroke="#FFE766" stroke-width="28" stroke-linecap="round" filter="url(#neonYellow)" />
+
+    <!-- Vertical Stem: Neon Pink -->
+    <path d="M 25 15 L 25 285" stroke="#FF3366" stroke-width="28" stroke-linecap="round" filter="url(#neonPink)" />
+
+    <!-- Play Loop: Neon Light Blue -->
+    <path d="M 25 25 L 205 137 C 215 143, 215 157, 205 163 L 25 275" 
+          fill="none" stroke="#33CCFF" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" filter="url(#neonBlue)" />
+
+    <!-- Floating Play Arrow core (Muted) -->
+    <path d="M 70,110 L 120,145 L 70,180 Z" fill="#FFE766" />
+  </g>
+</svg>

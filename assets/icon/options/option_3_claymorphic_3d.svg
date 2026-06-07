@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Soft Clay Gradients -->
+    <linearGradient id="clayPink" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FF6B97" />
+      <stop offset="100%" stop-color="#FF3366" />
+    </linearGradient>
+    <linearGradient id="clayBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#80E2FF" />
+      <stop offset="100%" stop-color="#33A6FF" />
+    </linearGradient>
+    <linearGradient id="clayYellow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFF099" />
+      <stop offset="100%" stop-color="#FFCC00" />
+    </linearGradient>
+
+    <!-- Clay 3D Drop Shadows -->
+    <filter id="clayShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="12" flood-color="#000000" flood-opacity="0.1" />
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" rx="140" fill="#FFFFFF" />
+  <rect x="76" y="76" width="360" height="360" rx="90" fill="#F4F7FB" stroke="#E2E7EE" stroke-width="2" />
+
+  <!-- 3D Clay Elements forming 'R' and play button -->
+  <g filter="url(#clayShadow)">
+    <!-- Kickstand: 3D Blue Clay Pill -->
+    <rect x="220" y="240" width="56" height="150" rx="28" transform="rotate(-35, 248, 315)" fill="url(#clayBlue)" />
+
+    <!-- Stem: 3D Pink Clay Pill -->
+    <rect x="140" y="110" width="56" height="280" rx="28" fill="url(#clayPink)" />
+
+    <!-- Loop: 3D Yellow Clay Play Button Triangle -->
+    <path d="M 180,110 L 340,200 C 352,206 352,214 340,220 L 180,310 Z" fill="url(#clayYellow)" />
+
+    <!-- Glossy Highlight Overlay on loop (3D sheen) -->
+    <path d="M 196,130 L 310,195 L 196,210 Z" fill="#FFFFFF" fill-opacity="0.25" />
+  </g>
+</svg>
