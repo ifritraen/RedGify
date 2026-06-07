@@ -11,6 +11,7 @@ import '../creator/creator_profile_screen.dart';
 import '../player/tag_results_screen.dart';
 import '../widgets/glassy_container.dart';
 import '../widgets/playback_settings_sheet.dart';
+import '../../providers/library_provider.dart';
 
 class MeProfileScreen extends StatefulWidget {
   const MeProfileScreen({super.key});
@@ -548,6 +549,113 @@ class _MeProfileScreenState extends State<MeProfileScreen> {
                     ),
                   );
                 }, prefix: '👤 '),
+
+                // Subscribed Creators Section
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Text(
+                      'Subscribed Creators',
+                      style: GoogleFonts.outfit(
+                        color: isDark ? Colors.white : AppTheme.textPrimaryLight,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Consumer<LibraryProvider>(
+                  builder: (context, libraryProvider, child) {
+                    final subscribed = libraryProvider.subscribedCreators;
+                    if (subscribed.isEmpty) {
+                      return Container(
+                        height: 80,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: AppTheme.cardBg,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: isDark ? Colors.white.withAlpha(10) : Colors.black.withAlpha(10)),
+                        ),
+                        child: Text(
+                          'No subscribed creators yet',
+                          style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                        ),
+                      );
+                    }
+
+                    return GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: MediaQuery.of(context).size.width > 600 ? 4 : 2,
+                        crossAxisSpacing: 16,
+                        mainAxisSpacing: 16,
+                        childAspectRatio: 1.1,
+                      ),
+                      itemCount: subscribed.length,
+                      itemBuilder: (context, index) {
+                        final creatorName = subscribed[index];
+                        return GlassyContainer(
+                          color: AppTheme.cardBg,
+                          borderColor: AppTheme.border,
+                          borderRadius: 16,
+                          padding: const EdgeInsets.all(12),
+                          child: InkWell(
+                             onTap: () {
+                               Navigator.push(
+                                 context,
+                                 MaterialPageRoute(
+                                   builder: (context) => CreatorProfileScreen(username: creatorName),
+                                 ),
+                               );
+                             },
+                             child: Stack(
+                               children: [
+                                 Center(
+                                   child: Column(
+                                     mainAxisAlignment: MainAxisAlignment.center,
+                                     children: [
+                                       CircleAvatar(
+                                         radius: 24,
+                                         backgroundColor: AppTheme.primaryNeon.withAlpha(50),
+                                         child: const Icon(Icons.person, size: 24, color: AppTheme.primaryNeon),
+                                       ),
+                                       const SizedBox(height: 8),
+                                       Text(
+                                         '@$creatorName',
+                                         style: GoogleFonts.outfit(
+                                           color: isDark ? Colors.white : AppTheme.textPrimaryLight,
+                                           fontSize: 13,
+                                           fontWeight: FontWeight.bold,
+                                         ),
+                                         maxLines: 1,
+                                         overflow: TextOverflow.ellipsis,
+                                         textAlign: TextAlign.center,
+                                       ),
+                                     ],
+                                   ),
+                                 ),
+                                 Positioned(
+                                   top: 0,
+                                   right: 0,
+                                   child: IconButton(
+                                     icon: const Icon(Icons.close, size: 16, color: Colors.redAccent),
+                                     onPressed: () {
+                                       libraryProvider.unsubscribeCreator(creatorName);
+                                     },
+                                     constraints: const BoxConstraints(),
+                                     padding: EdgeInsets.zero,
+                                    ),
+                                  ),
+                               ],
+                             ),
+                           ),
+                         );
+                       },
+                    );
+                  },
+                ),
               ],
             ),
           );
