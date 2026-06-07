@@ -8,6 +8,7 @@ import '../../models/gif_info.dart';
 import '../widgets/video_card.dart';
 import '../widgets/bulk_action_bar.dart';
 import '../widgets/glassy_container.dart';
+import '../../providers/download_provider.dart';
 
 class LibraryScreen extends StatefulWidget {
   const LibraryScreen({super.key});
@@ -23,7 +24,7 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
   }
 
   void _showCreateCategoryDialog(BuildContext context, LibraryProvider provider) {
@@ -173,6 +174,7 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
                     Tab(text: 'Favorites'),
                     Tab(text: 'Playlists'),
                     Tab(text: 'History'),
+                    Tab(text: 'Downloads'),
                   ],
                 ),
               ),
@@ -484,6 +486,146 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
                     ),
                   ],
                 ),
+
+          // Downloads Tab
+          Consumer<DownloadProvider>(
+            builder: (context, downloadProvider, child) {
+              final active = downloadProvider.activeDownloads;
+              final completed = downloadProvider.completedDownloads;
+
+              if (active.isEmpty && completed.isEmpty) {
+                return Center(
+                  child: Text(
+                    'No downloads yet.',
+                    style: TextStyle(color: AppTheme.textSecondary),
+                  ),
+                );
+              }
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (active.isNotEmpty) ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      child: Text(
+                        'Downloading (${active.length})',
+                        style: TextStyle(
+                          color: AppTheme.textPrimary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: active.length,
+                      itemBuilder: (context, index) {
+                        final gifId = active.keys.elementAt(index);
+                        final progress = active[gifId] ?? 0.0;
+                        return GlassyContainer(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          color: AppTheme.cardBg,
+                          borderColor: AppTheme.border,
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: Colors.black38,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.downloading,
+                                  color: AppTheme.primaryNeon,
+                                  size: 20,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Video ID: $gifId',
+                                      style: TextStyle(
+                                        color: AppTheme.textPrimary,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(4),
+                                      child: LinearProgressIndicator(
+                                        value: progress > 0 ? progress : null,
+                                        backgroundColor: Colors.white10,
+                                        valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primaryNeon),
+                                        minHeight: 4,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                progress > 0 ? '${(progress * 100).toStringAsFixed(0)}%' : '...',
+                                style: TextStyle(
+                                  color: AppTheme.textSecondary,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                  if (completed.isNotEmpty) ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      child: Text(
+                        'Finished (${completed.length})',
+                        style: TextStyle(
+                          color: AppTheme.textPrimary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: GridView.builder(
+                        padding: const EdgeInsets.only(left: 16, right: 16, top: 0, bottom: 84),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 0,
+                          childAspectRatio: 0.70,
+                        ),
+                        itemCount: completed.length,
+                        itemBuilder: (context, index) {
+                          final completedGifs = completed.map((x) => x.gif).toList();
+                          return VideoCard(
+                            gif: completedGifs[index],
+                            siblings: completedGifs,
+                            index: index,
+                          );
+                        },
+                      ),
+                    ),
+                  ] else
+                    const Expanded(
+                      child: SizedBox.shrink(),
+                    ),
+                ],
+              );
+            },
+          ),
         ],
       ),
     );

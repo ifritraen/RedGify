@@ -9,7 +9,7 @@ import '../widgets/video_card.dart';
 // import '../widgets/sidebar.dart';
 import '../explore/explore_screen.dart';
 import '../library/library_screen.dart';
-import '../ai/ai_screen.dart';
+// import '../ai/ai_screen.dart';
 import '../profile/me_profile_screen.dart';
 import '../widgets/bulk_action_bar.dart';
 import '../widgets/glassy_container.dart';
@@ -293,11 +293,6 @@ class _HomeScreenState extends State<HomeScreen> {
     } else if (_currentBottomNavIndex == 2) {
       activeBody = const LibraryScreen();
     } else if (_currentBottomNavIndex == 3) {
-      // activeBody = const AIScreen();
-      activeBody = const SafeArea(child: AIScreen());
-    } else if (_currentBottomNavIndex == 4) {
-      // activeBody = Center(child: Text('Me Profile (Coming soon)', style: TextStyle(color: Colors.white.withAlpha(191))));
-      // activeBody = SafeArea(child: Center(child: Text('Me Profile (Coming soon)', style: TextStyle(color: Colors.white.withAlpha(191)))));
       activeBody = const MeProfileScreen();
     } else {
       // activeBody = _buildHomeFeedBody(feed, search);
@@ -377,8 +372,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     _buildNavItem(1, Icons.explore_outlined, Icons.explore, 'Explore'),
                     _buildNavItem(-1, Icons.search_outlined, Icons.search, 'Search', onTapOverride: _showSearchBottomSheet),
                     _buildNavItem(2, Icons.bookmark_outline, Icons.bookmark, 'Library'),
-                    _buildNavItem(3, Icons.psychology_outlined, Icons.psychology, 'AI Gen'),
-                    _buildNavItem(4, Icons.person_outline, Icons.person, 'Me'),
+                    // _buildNavItem(3, Icons.psychology_outlined, Icons.psychology, 'AI Gen'),
+                    _buildNavItem(3, Icons.person_outline, Icons.person, 'Me'),
                   ],
                 ),
               ),

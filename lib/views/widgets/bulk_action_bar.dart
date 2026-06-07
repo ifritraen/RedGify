@@ -5,7 +5,7 @@ import '../../providers/selection_provider.dart';
 import '../../providers/library_provider.dart';
 import '../../config/theme.dart';
 import '../../models/gif_info.dart';
-import '../../services/download_service.dart';
+import '../../providers/download_provider.dart';
 import 'glassy_container.dart';
 
 class BulkActionBar extends StatefulWidget {
@@ -36,9 +36,14 @@ class _BulkActionBarState extends State<BulkActionBar> {
       });
 
       try {
-        final url = gif.urls.hd.isNotEmpty ? gif.urls.hd : gif.urls.sd;
-        await DownloadService().downloadVideo(url, gif.id);
-        downloaded++;
+        final downloadProvider = Provider.of<DownloadProvider>(context, listen: false);
+        await downloadProvider.startDownload(context, gif);
+        final isCompleted = downloadProvider.completedDownloads.any((item) => item.gif.id == gif.id);
+        if (isCompleted) {
+          downloaded++;
+        } else {
+          failed++;
+        }
       } catch (_) {
         failed++;
       }

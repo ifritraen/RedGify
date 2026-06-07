@@ -6,7 +6,7 @@ import '../../models/gif_info.dart';
 import '../../config/theme.dart';
 import '../../providers/library_provider.dart';
 import '../../providers/search_provider.dart';
-import '../../services/download_service.dart';
+import '../../providers/download_provider.dart';
 import '../widgets/playlist_selector_sheet.dart';
 import '../widgets/neon_vector_buttons.dart';
 import '../creator/creator_profile_screen.dart';
@@ -237,50 +237,12 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
     }
   }
 
-  Future<void> _startDownload() async {
-    if (_isDownloading) return;
-    setState(() {
-      _isDownloading = true;
-      _downloadProgress = 0.0;
-    });
-
-    try {
-      final downloadUrl = widget.gif.urls.hd.isNotEmpty ? widget.gif.urls.hd : widget.gif.urls.sd;
-      final path = await DownloadService().downloadVideo(
-        downloadUrl,
-        widget.gif.id,
-        onProgress: (p) {
-          setState(() {
-            _downloadProgress = p;
-          });
-        },
-      );
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Downloaded successfully to: $path'),
-            backgroundColor: Colors.green,
-            duration: const Duration(seconds: 4),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to download: $e'),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isDownloading = false;
-        });
-      }
-    }
-  }
+  // Future<void> _startDownload() async {
+  //   if (_isDownloading) return;
+  //   setState(() {
+  //     _isDownloading = true;
+  //   });
+  // }
 
   void _showPlaylistSelector() {
     showModalBottomSheet(
@@ -515,38 +477,41 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
                   // const SizedBox(height: 16),
                   const SizedBox(height: 12),
                   // Download
-                  _isDownloading
-                      ? Column(
-                          children: [
-                            SizedBox(
-                              // width: 32,
-                              // height: 32,
-                              width: 28,
-                              height: 28,
-                              child: CircularProgressIndicator(
-                                value: _downloadProgress > 0 ? _downloadProgress : null,
-                                strokeWidth: 2,
-                                color: AppTheme.primaryNeon,
-                                backgroundColor: Colors.white24,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              _downloadProgress > 0
-                                  ? '${(_downloadProgress * 100).toStringAsFixed(0)}%'
-                                  : '...',
-                              style: const TextStyle(color: Colors.white, fontSize: 9),
-                            ),
-                          ],
-                        )
-                      : NeonVectorIcon(
-                          painter: DownloadPainter(color: Colors.white70),
-                          glowColor: AppTheme.accentNeon,
-                          // size: 26,
-                          size: 20,
-                          label: 'Get',
-                          onTap: _startDownload,
-                        ),
+                  Consumer<DownloadProvider>(
+                    builder: (context, downloadProvider, child) {
+                      final isDownloading = downloadProvider.isDownloading(widget.gif.id);
+                      final progress = downloadProvider.getProgress(widget.gif.id);
+                      return isDownloading
+                          ? Column(
+                              children: [
+                                SizedBox(
+                                  width: 28,
+                                  height: 28,
+                                  child: CircularProgressIndicator(
+                                    value: progress > 0 ? progress : null,
+                                    strokeWidth: 2,
+                                    color: AppTheme.primaryNeon,
+                                    backgroundColor: Colors.white24,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  progress > 0
+                                      ? '${(progress * 100).toStringAsFixed(0)}%'
+                                      : '...',
+                                  style: const TextStyle(color: Colors.white, fontSize: 9),
+                                ),
+                              ],
+                            )
+                          : NeonVectorIcon(
+                              painter: DownloadPainter(color: Colors.white70),
+                              glowColor: AppTheme.accentNeon,
+                              size: 20,
+                              label: 'Get',
+                              onTap: () => downloadProvider.startDownload(context, widget.gif),
+                            );
+                    },
+                  ),
                   // const SizedBox(height: 16),
                   const SizedBox(height: 12),
                   // Share

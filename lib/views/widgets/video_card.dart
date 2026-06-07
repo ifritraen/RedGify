@@ -7,7 +7,7 @@ import '../../config/theme.dart';
 import '../../providers/feed_provider.dart';
 import '../../providers/selection_provider.dart';
 import '../../providers/library_provider.dart';
-import '../../services/download_service.dart';
+import '../../providers/download_provider.dart';
 import '../player/viewer_screen.dart';
 import '../creator/creator_profile_screen.dart';
 import 'playlist_selector_sheet.dart';
@@ -159,26 +159,9 @@ class VideoCard extends StatelessWidget {
                     ListTile(
                       leading: Icon(Icons.file_download, color: iconColor),
                       title: Text('Download', style: TextStyle(color: textColor)),
-                      onTap: () async {
+                      onTap: () {
                         Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Starting download...'), duration: Duration(seconds: 2)),
-                        );
-                        try {
-                          final downloadUrl = gif.urls.hd.isNotEmpty ? gif.urls.hd : gif.urls.sd;
-                          final path = await DownloadService().downloadVideo(downloadUrl, gif.id);
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Saved to: $path'), backgroundColor: Colors.green),
-                            );
-                          }
-                        } catch (e) {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Download failed: $e'), backgroundColor: Colors.redAccent),
-                            );
-                          }
-                        }
+                        Provider.of<DownloadProvider>(context, listen: false).startDownload(context, gif);
                       },
                     ),
                     ListTile(
