@@ -5,120 +5,47 @@
     android:viewportWidth="512"
     android:viewportHeight="512">
 
-    <!-- Scaling Group to fit inside the Adaptive Icon Safe Zone (66% / 0.72 scale) -->
+    <!-- Scaling Group to center and fit within the adaptive safe zone (72% scale) -->
     <group
         android:scaleX="0.72"
         android:scaleY="0.72"
         android:translateX="71.68"
         android:translateY="71.68">
 
-        <!-- Outer Ring 1 (cyanGrad stroke, 40% opacity -> #66...) -->
+        <!-- Outer play/R ribbon curve (stroke width 44) -->
         <path
-            android:pathData="M 256,256 m -210,0 a 210,210 0 1,1 420,0 a 210,210 0 1,1 -420,0"
-            android:strokeWidth="3">
+            android:pathData="M 160,120 L 160,392 C 160,405 175,412 185,404 L 380,268 C 390,260 390,252 380,244 L 240,140 C 230,132 215,138 215,152 L 215,270"
+            android:strokeWidth="44"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round">
             <aapt:attr name="android:strokeColor">
                 <gradient
-                    android:startX="0"
-                    android:startY="0"
-                    android:endX="512"
-                    android:endY="512"
+                    android:startX="160"
+                    android:startY="120"
+                    android:endX="380"
+                    android:endY="404"
                     android:type="linear">
-                    <item android:offset="0" android:color="#6633CCFF" />
-                    <item android:offset="1" android:color="#663366FF" />
+                    <item android:offset="0" android:color="#FF2D55" /> <!-- Cheerful Pink -->
+                    <item android:offset="0.5" android:color="#FF5E3A" /> <!-- Orange -->
+                    <item android:offset="1" android:color="#FFB300" /> <!-- Sunset Gold -->
                 </gradient>
             </aapt:attr>
         </path>
 
-        <!-- Outer Ring 2 (pinkGrad stroke, 30% opacity -> #4D...) -->
+        <!-- Innermost playful play core indicator -->
         <path
-            android:pathData="M 256,256 m -190,0 a 190,190 0 1,1 380,0 a 190,190 0 1,1 -380,0"
-            android:strokeWidth="1.5">
-            <aapt:attr name="android:strokeColor">
+            android:pathData="M 235,210 L 295,256 L 235,302 Z">
+            <aapt:attr name="android:fillColor">
                 <gradient
-                    android:startX="0"
-                    android:startY="0"
-                    android:endX="512"
-                    android:endY="512"
+                    android:startX="235"
+                    android:startY="210"
+                    android:endX="295"
+                    android:endY="302"
                     android:type="linear">
-                    <item android:offset="0" android:color="#4DFF3366" />
-                    <item android:offset="1" android:color="#4DFF9933" />
+                    <item android:offset="0" android:color="#FF2D55" />
+                    <item android:offset="1" android:color="#AF52DE" /> <!-- Purple -->
                 </gradient>
             </aapt:attr>
         </path>
-
-        <!-- R Logo + Play Button Icon Group -->
-        <group
-            android:translateX="140"
-            android:translateY="110">
-
-            <!-- R vertical leg -->
-            <path
-                android:pathData="M 0,15 A 15,15 0 0 1 15,0 L 30,0 A 15,15 0 0 1 45,15 L 45,275 A 15,15 0 0 1 30,290 L 15,290 A 15,15 0 0 1 0,275 Z">
-                <aapt:attr name="android:fillColor">
-                    <gradient
-                        android:startX="0"
-                        android:startY="0"
-                        android:endX="200"
-                        android:endY="290"
-                        android:type="linear">
-                        <item android:offset="0" android:color="#FF3366" />
-                        <item android:offset="1" android:color="#FF9933" />
-                    </gradient>
-                </aapt:attr>
-            </path>
-
-            <!-- R loop path (stroke width 45) -->
-            <path
-                android:pathData="M 40,0 C 130,0 180,40 180,110 C 180,170 130,200 40,200"
-                android:strokeWidth="45"
-                android:strokeLineCap="round"
-                android:strokeLineJoin="round">
-                <aapt:attr name="android:strokeColor">
-                    <gradient
-                        android:startX="0"
-                        android:startY="0"
-                        android:endX="200"
-                        android:endY="290"
-                        android:type="linear">
-                        <item android:offset="0" android:color="#FF3366" />
-                        <item android:offset="1" android:color="#FF9933" />
-                    </gradient>
-                </aapt:attr>
-            </path>
-
-            <!-- Play button inside R loop -->
-            <path
-                android:pathData="M 75,65 L 140,100 L 75,135 Z">
-                <aapt:attr name="android:fillColor">
-                    <gradient
-                        android:startX="75"
-                        android:startY="65"
-                        android:endX="140"
-                        android:endY="135"
-                        android:type="linear">
-                        <item android:offset="0" android:color="#33CCFF" />
-                        <item android:offset="1" android:color="#3366FF" />
-                    </gradient>
-                </aapt:attr>
-            </path>
-
-            <!-- R leg kickout -->
-            <path
-                android:pathData="M 100,180 L 195,290"
-                android:strokeWidth="45"
-                android:strokeLineCap="round">
-                <aapt:attr name="android:strokeColor">
-                    <gradient
-                        android:startX="100"
-                        android:startY="180"
-                        android:endX="195"
-                        android:endY="290"
-                        android:type="linear">
-                        <item android:offset="0" android:color="#33CCFF" />
-                        <item android:offset="1" android:color="#3366FF" />
-                    </gradient>
-                </aapt:attr>
-            </path>
-        </group>
     </group>
 </vector>
