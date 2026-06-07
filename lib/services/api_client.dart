@@ -165,7 +165,7 @@ class ApiClient {
       }
     }
 
-    final url = '${ApiConstants.usersEndpoint}/$username';
+    final url = 'https://api.redgifs.com/v1/users/$username';
     final response = await get(url);
 
     if (response.statusCode == 200) {
