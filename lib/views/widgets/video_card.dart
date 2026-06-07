@@ -1,5 +1,8 @@
 import 'dart:ui';
+import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:provider/provider.dart';
 import '../../models/gif_info.dart';
@@ -13,7 +16,7 @@ import '../creator/creator_profile_screen.dart';
 import 'playlist_selector_sheet.dart';
 import 'glassy_container.dart';
 
-class VideoCard extends StatelessWidget {
+class VideoCard extends StatefulWidget {
   final GifInfo gif;
   final List<GifInfo>? siblings;
   final int? index;
@@ -24,6 +27,85 @@ class VideoCard extends StatelessWidget {
     this.siblings,
     this.index,
   });
+
+  @override
+  State<VideoCard> createState() => _VideoCardState();
+}
+
+class _VideoCardState extends State<VideoCard> {
+  VideoPlayerController? _previewController;
+  Timer? _delayTimer;
+  bool _showPreview = false;
+  bool _isLoadingPreview = false;
+
+  @override
+  void dispose() {
+    _cleanupPreview();
+    super.dispose();
+  }
+
+  void _cleanupPreview() {
+    _delayTimer?.cancel();
+    _delayTimer = null;
+    if (_previewController != null) {
+      final controllerToDispose = _previewController;
+      _previewController = null;
+      Future.microtask(() => controllerToDispose.dispose());
+    }
+    if (mounted) {
+      setState(() {
+        _showPreview = false;
+        _isLoadingPreview = false;
+      });
+    }
+  }
+
+  void _startPreviewTimer() {
+    _cleanupPreview();
+    _delayTimer = Timer(const Duration(milliseconds: 300), () {
+      if (!mounted) return;
+      _initializePreviewController();
+    });
+  }
+
+  void _initializePreviewController() {
+    final mediaUrl = widget.gif.urls.sd.isNotEmpty ? widget.gif.urls.sd : widget.gif.urls.hd;
+    if (mediaUrl.isEmpty) return;
+
+    final bool isLocalFile = mediaUrl.startsWith('/') || mediaUrl.contains(':\\') || mediaUrl.contains(':/') || !mediaUrl.startsWith('http');
+
+    setState(() {
+      _isLoadingPreview = true;
+    });
+
+    if (isLocalFile) {
+      _previewController = VideoPlayerController.file(File(mediaUrl));
+    } else {
+      _previewController = VideoPlayerController.networkUrl(
+        Uri.parse(mediaUrl),
+        httpHeaders: const {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Referer': 'https://www.redgifs.com/',
+        },
+      );
+    }
+
+    _previewController!.initialize().then((_) {
+      if (!mounted || _previewController == null) {
+        _cleanupPreview();
+        return;
+      }
+      _previewController!.setVolume(0); // Mute preview
+      _previewController!.setLooping(true);
+      _previewController!.play();
+      setState(() {
+        _isLoadingPreview = false;
+        _showPreview = true;
+      });
+    }).catchError((_) {
+      _cleanupPreview();
+    });
+  }
 
   void _showCategorySelectionDialog(BuildContext context, LibraryProvider libraryProvider) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -36,7 +118,7 @@ class VideoCard extends StatelessWidget {
         return StatefulBuilder(
           builder: (context, setState) {
             final categories = libraryProvider.favoriteCategories;
-            final gifCategories = libraryProvider.getCategoriesForGif(gif.id);
+            final gifCategories = libraryProvider.getCategoriesForGif(widget.gif.id);
 
             return AlertDialog(
               backgroundColor: AppTheme.background,
@@ -60,7 +142,7 @@ class VideoCard extends StatelessWidget {
                             title: Text(catName, style: TextStyle(color: textColor)),
                             value: belongs,
                             onChanged: (val) async {
-                              await libraryProvider.toggleGifInFavoriteCategory(catName, gif.id);
+                              await libraryProvider.toggleGifInFavoriteCategory(catName, widget.gif.id);
                               setState(() {});
                             },
                           );
@@ -81,7 +163,7 @@ class VideoCard extends StatelessWidget {
   }
 
   void _showContextSheet(BuildContext context, SelectionProvider selectionProvider, LibraryProvider libraryProvider) {
-    final isFav = libraryProvider.isFavorited(gif.id);
+    final isFav = libraryProvider.isFavorited(widget.gif.id);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final sheetBg = isDark ? Colors.black.withAlpha(200) : Colors.white.withAlpha(235);
     final textColor = isDark ? Colors.white : AppTheme.textPrimaryLight;
@@ -115,7 +197,7 @@ class VideoCard extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       child: Text(
-                        '@${gif.userName}\'s video',
+                        '@${widget.gif.userName}\'s video',
                         style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                     ),
@@ -129,7 +211,7 @@ class VideoCard extends StatelessWidget {
                           context: context,
                           isScrollControlled: true,
                           backgroundColor: Colors.transparent,
-                          builder: (context) => PlaylistSelectorSheet(gif: gif),
+                          builder: (context) => PlaylistSelectorSheet(gif: widget.gif),
                         );
                       },
                     ),
@@ -144,7 +226,7 @@ class VideoCard extends StatelessWidget {
                       ),
                       onTap: () {
                         Navigator.pop(context);
-                        libraryProvider.toggleFavorite(gif);
+                        libraryProvider.toggleFavorite(widget.gif);
                       },
                     ),
                     if (isFav)
@@ -161,7 +243,7 @@ class VideoCard extends StatelessWidget {
                       title: Text('Download', style: TextStyle(color: textColor)),
                       onTap: () {
                         Navigator.pop(context);
-                        Provider.of<DownloadProvider>(context, listen: false).startDownload(context, gif);
+                        Provider.of<DownloadProvider>(context, listen: false).startDownload(context, widget.gif);
                       },
                     ),
                     ListTile(
@@ -169,7 +251,7 @@ class VideoCard extends StatelessWidget {
                       title: Text('Select Multiple', style: TextStyle(color: textColor)),
                       onTap: () {
                         Navigator.pop(context);
-                        selectionProvider.enterSelectionMode(gif);
+                        selectionProvider.enterSelectionMode(widget.gif);
                       },
                     ),
                   ],
@@ -186,7 +268,7 @@ class VideoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final selectionProvider = Provider.of<SelectionProvider>(context);
     final libraryProvider = Provider.of<LibraryProvider>(context);
-    final isSelected = selectionProvider.isSelected(gif.id);
+    final isSelected = selectionProvider.isSelected(widget.gif.id);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final cardBorderColor = isSelected 
@@ -209,17 +291,27 @@ class VideoCard extends StatelessWidget {
           offset: const Offset(0, 4),
         )
       ],
-      child: InkWell(
+      child: GestureDetector(
+        onTapDown: (_) {
+          _startPreviewTimer();
+        },
+        onTapUp: (_) {
+          _cleanupPreview();
+        },
+        onTapCancel: () {
+          _cleanupPreview();
+        },
         onTap: () async {
+          _cleanupPreview();
           if (selectionProvider.isSelectionMode) {
-            selectionProvider.toggleSelection(gif);
+            selectionProvider.toggleSelection(widget.gif);
           } else {
             await Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => ViewerScreen(
-                  gifs: siblings ?? [gif],
-                  initialIndex: index ?? 0,
+                  gifs: widget.siblings ?? [widget.gif],
+                  initialIndex: widget.index ?? 0,
                 ),
               ),
             );
@@ -229,8 +321,9 @@ class VideoCard extends StatelessWidget {
           }
         },
         onLongPress: () {
+          _cleanupPreview();
           if (selectionProvider.isSelectionMode) {
-            selectionProvider.toggleSelection(gif);
+            selectionProvider.toggleSelection(widget.gif);
           } else {
             _showContextSheet(context, selectionProvider, libraryProvider);
           }
@@ -238,27 +331,56 @@ class VideoCard extends StatelessWidget {
         child: SizedBox.expand(
           child: Stack(
             children: [
-              // Poster/Thumbnail Image
+              // Poster/Thumbnail Image + Video Preview
               Positioned.fill(
-                child: Image.network(
-                  gif.urls.poster ?? gif.urls.thumbnail ?? '',
-                  fit: BoxFit.cover,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return Shimmer.fromColors(
-                      baseColor: isDark ? const Color(0xFF1E1A2E) : const Color(0xFFE5E2F0),
-                      highlightColor: isDark ? const Color(0xFF2E264D) : const Color(0xFFF3F1FA),
-                      child: Container(color: Colors.black),
-                    );
-                  },
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: isDark ? const Color(0xFF1E1A2E) : const Color(0xFFE5E2F0),
-                      child: Center(
-                        child: Icon(Icons.broken_image, color: isDark ? Colors.white30 : Colors.black26),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.network(
+                      widget.gif.urls.poster ?? widget.gif.urls.thumbnail ?? '',
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Shimmer.fromColors(
+                          baseColor: isDark ? const Color(0xFF1E1A2E) : const Color(0xFFE5E2F0),
+                          highlightColor: isDark ? const Color(0xFF2E264D) : const Color(0xFFF3F1FA),
+                          child: Container(color: Colors.black),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: isDark ? const Color(0xFF1E1A2E) : const Color(0xFFE5E2F0),
+                          child: Center(
+                            child: Icon(Icons.broken_image, color: isDark ? Colors.white30 : Colors.black26),
+                          ),
+                        );
+                      },
+                    ),
+                    if (_showPreview && _previewController != null && _previewController!.value.isInitialized)
+                      Positioned.fill(
+                        child: FittedBox(
+                          fit: BoxFit.cover,
+                          child: SizedBox(
+                            width: _previewController!.value.size.width,
+                            height: _previewController!.value.size.height,
+                            child: VideoPlayer(_previewController!),
+                          ),
+                        ),
                       ),
-                    );
-                  },
+                    if (_isLoadingPreview)
+                      Positioned(
+                        top: 8,
+                        left: 8,
+                        child: SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 1.5,
+                            color: AppTheme.primaryNeon,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
   
@@ -286,13 +408,14 @@ class VideoCard extends StatelessWidget {
                       Expanded(
                         child: GestureDetector(
                           onTap: () {
+                            _cleanupPreview();
                             if (selectionProvider.isSelectionMode) {
-                              selectionProvider.toggleSelection(gif);
+                              selectionProvider.toggleSelection(widget.gif);
                             } else {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => CreatorProfileScreen(username: gif.userName),
+                                  builder: (context) => CreatorProfileScreen(username: widget.gif.userName),
                                 ),
                               );
                             }
@@ -302,7 +425,7 @@ class VideoCard extends StatelessWidget {
                             children: [
                               Expanded(
                                 child: Text(
-                                  '@${gif.userName}',
+                                  '@${widget.gif.userName}',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
@@ -312,7 +435,7 @@ class VideoCard extends StatelessWidget {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
-                              if (gif.verified) ...[
+                              if (widget.gif.verified) ...[
                                 const SizedBox(width: 2),
                                 const Icon(Icons.verified, size: 12, color: AppTheme.accentNeon),
                               ],
@@ -328,7 +451,7 @@ class VideoCard extends StatelessWidget {
                           Icon(Icons.remove_red_eye, size: 10, color: Colors.white.withOpacity(0.8)),
                           const SizedBox(width: 2),
                           Text(
-                            '${gif.views}',
+                            '${widget.gif.views}',
                             style: TextStyle(fontSize: 9, color: Colors.white.withOpacity(0.8)),
                           ),
                           const SizedBox(width: 4),
@@ -339,7 +462,7 @@ class VideoCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
-                              '${gif.duration.toStringAsFixed(1)}s',
+                              '${widget.gif.duration.toStringAsFixed(1)}s',
                               style: const TextStyle(fontSize: 9, color: Colors.white),
                             ),
                           ),
