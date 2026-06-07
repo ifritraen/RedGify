@@ -207,7 +207,7 @@ class _ExploreScreenState extends State<ExploreScreen> with SingleTickerProvider
                                 unselectedLabelColor: AppTheme.textSecondary,
                                 labelStyle: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.bold),
                                 unselectedLabelStyle: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.normal),
-                                isScrollable: true,
+                                isScrollable: false,
                                 tabs: const [
                                   Tab(text: 'Gif'),
                                   Tab(text: 'Images'),
