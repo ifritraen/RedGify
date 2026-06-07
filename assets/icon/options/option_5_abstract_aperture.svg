@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <filter id="glow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#FF3366" flood-opacity="0.1" />
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="140" fill="#FFFFFF" />
+  <!-- Cheerful Soft Sky Blue base card -->
+  <rect x="76" y="76" width="360" height="360" rx="90" fill="#F4F8FD" stroke="#E6EEF8" stroke-width="1.5" />
+
+  <g filter="url(#glow)" transform="translate(256, 256)">
+    <!-- 6 rotating, overlapping rounded blades in pink, yellow, blue -->
+    <!-- Blade 1: Pink -->
+    <path d="M 0,0 L 0,-130 C 40,-130, 80,-90, 80,-50 Z" fill="#FF5E8A" opacity="0.8" transform="rotate(0)" />
+    <!-- Blade 2: Yellow -->
+    <path d="M 0,0 L 0,-130 C 40,-130, 80,-90, 80,-50 Z" fill="#FFE169" opacity="0.8" transform="rotate(60)" />
+    <!-- Blade 3: Blue -->
+    <path d="M 0,0 L 0,-130 C 40,-130, 80,-90, 80,-50 Z" fill="#6BD6FF" opacity="0.8" transform="rotate(120)" />
+    <!-- Blade 4: Pink -->
+    <path d="M 0,0 L 0,-130 C 40,-130, 80,-90, 80,-50 Z" fill="#FF5E8A" opacity="0.8" transform="rotate(180)" />
+    <!-- Blade 5: Yellow -->
+    <path d="M 0,0 L 0,-130 C 40,-130, 80,-90, 80,-50 Z" fill="#FFE169" opacity="0.8" transform="rotate(240)" />
+    <!-- Blade 6: Blue -->
+    <path d="M 0,0 L 0,-130 C 40,-130, 80,-90, 80,-50 Z" fill="#6BD6FF" opacity="0.8" transform="rotate(300)" />
+    
+    <!-- Central glassy eye/lens element -->
+    <circle cx="0" cy="0" r="45" fill="#FFFFFF" fill-opacity="0.3" stroke="#FFFFFF" stroke-opacity="0.9" stroke-width="4" />
+    <polygon points="-12,-18 18,0 -12,18" fill="#FFFFFF" />
+  </g>
+</svg>
