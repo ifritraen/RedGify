@@ -39,8 +39,68 @@ If a credential is not defined in `sensitive.md`, check the resolved fallback pr
      git remote set-url origin "https://<USERNAME>:<TOKEN>@github.com/<USERNAME>/$repoName.git"
      ```
 
-4. **Dynamically Detect Project Type & Build (Optional)**:
-   - If `pubspec.yaml` exists, run `flutter build apk --split-per-abi` or appropriate build command.
+4. **Dynamically Detect Project Type, Auto-Increment Version & Build**:
+   - If `pubspec.yaml` exists, parse and increment the version code and build number before building:
+     ```powershell
+     # Determine release type (minor: 0.0.1, major: 0.1.0, big/jump: 1.0.0)
+     $releaseType = "minor"
+     if ($env:RELEASE_TYPE) {
+         $releaseType = $env:RELEASE_TYPE.ToLower()
+     } elseif ($args -contains "major" -or $args -contains "0.1.0") {
+         $releaseType = "major"
+      } elseif ($args -contains "big" -or $args -contains "jump" -or $args -contains "1.0.0" -or $args -contains "big-release") {
+         $releaseType = "big"
+     }
+
+     $pubspec = Get-Content pubspec.yaml -Raw
+     if ($pubspec -match 'name:\s*([^\r\n]+)') {
+         $rawName = $Matches[1].Trim()
+         $appName = $rawName.Substring(0,1).ToUpper() + $rawName.Substring(1)
+         if ($rawName -eq "rgify") { $appName = "RedGify" }
+     } else {
+         $appName = "App"
+     }
+
+     if ($pubspec -match 'version:\s*([0-9]+)\.([0-9]+)\.([0-9]+)\+([0-9]+)') {
+         $major = [int]$Matches[1]
+         $minor = [int]$Matches[2]
+         $patch = [int]$Matches[3]
+         $build = [int]$Matches[4]
+         $oldVer = "$major.$minor.$patch"
+
+         if ($releaseType -eq "big") {
+             $major += 1
+             $minor = 0
+             $patch = 0
+         } elseif ($releaseType -eq "major") {
+             $minor += 1
+             $patch = 0
+         } else {
+             $patch += 1
+         }
+         $build += 1
+
+         $newVer = "$major.$minor.$patch"
+         $newFullVer = "$newVer+$build"
+
+         # Update pubspec.yaml
+         $pubspec = $pubspec -replace 'version:\s*[0-9]+\.[0-9]+\.[0-9]+\+[0-9]+', "version: $newFullVer"
+         Set-Content pubspec.yaml -Value $pubspec -NoNewline
+
+         # Recursively find and replace old version references in all source files
+         $dartFiles = Get-ChildItem -Path "lib" -Filter "*.dart" -Recurse
+         foreach ($file in $dartFiles) {
+             $fileContent = Get-Content $file.FullName -Raw
+             if ($fileContent.Contains($oldVer)) {
+                 $fileContent = $fileContent.Replace($oldVer, $newVer)
+                 Set-Content $file.FullName -Value $fileContent -NoNewline
+             }
+         }
+         Write-Host "Version bumped to $newVer ($releaseType) and build number to $build"
+     }
+
+     flutter build apk --split-per-abi
+     ```
    - If `package.json` exists, run `npm run build` or appropriate build command.
    - If `gradlew` or Gradle project files exist, run `.\gradlew.bat assembleRelease` or `.\gradlew.bat assembleDebug`.
 
@@ -55,12 +115,43 @@ If a credential is not defined in `sensitive.md`, check the resolved fallback pr
    ```
 
 6. **Create a GitHub Release**:
-   - Determine release tag and description.
-   - If a build output or artifact exists (e.g. `.apk`, `.eapk`, build directory bundle), locate it and attach it to the release.
-   - Run `gh release create` to publish the release:
+   - Determine release tag and description, rename split ABI APKs, and attach to the release:
      ```powershell
-     $hash = (git rev-parse HEAD).SubString(0, 7)
-     gh release create "v$hash" --title "v$hash" --notes "Release version v$hash"
+     $pubspec = Get-Content pubspec.yaml -Raw
+     if ($pubspec -match 'name:\s*([^\r\n]+)') {
+         $rawName = $Matches[1].Trim()
+         $appName = $rawName.Substring(0,1).ToUpper() + $rawName.Substring(1)
+         if ($rawName -eq "rgify") { $appName = "RedGify" }
+     } else {
+         $appName = "App"
+     }
+
+     if ($pubspec -match 'version:\s*([0-9]+\.[0-9]+\.[0-9]+)\+[0-9]+') {
+         $newVer = $Matches[1]
+     } else {
+         $newVer = "1.0.0"
+     }
+     $tag = "${appName}_v${newVer}"
+
+     $apkDir = "build/app/outputs/flutter-apk"
+     $releaseApks = @()
+     if (Test-Path $apkDir) {
+         $apks = Get-ChildItem -Path $apkDir -Filter "app-*-release.apk"
+         foreach ($apk in $apks) {
+             $abi = $apk.Name -replace 'app-|-release\.apk', ''
+             $newName = "${appName}_v${newVer}_${abi}-release.apk"
+             $newPath = Join-Path $apkDir $newName
+             Rename-Item -Path $apk.FullName -NewName $newName -Force
+             $releaseApks += $newPath
+         }
+     }
+
+     if ($releaseApks.Count -gt 0) {
+         gh release create $tag $releaseApks --title $tag --notes "Release version $tag"
+     } else {
+         $hash = (git rev-parse HEAD).SubString(0, 7)
+         gh release create "v$hash" --title "v$hash" --notes "Release version v$hash"
+     }
      ```
 
 7. **Output Status**:

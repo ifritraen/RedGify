@@ -54,7 +54,13 @@ class LocalPlayerScreen extends StatelessWidget {
     final provider = Provider.of<LocalPlayerProvider>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
+    return PopScope(
+      canPop: !provider.canNavigateBack,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        provider.navigateBack();
+      },
+      child: Scaffold(
       appBar: AppBar(
         title: Text(
           'Local Reels',
@@ -99,6 +105,7 @@ class LocalPlayerScreen extends StatelessWidget {
               onPressed: () => _playAll(context, provider.videoFiles, 0),
             )
           : null,
+      ),
     );
   }
 
@@ -355,11 +362,17 @@ class LocalPlayerScreen extends StatelessWidget {
           ),
         ),
 
-        // Video Files List Layout
+        // Video Files Grid Layout
         if (provider.videoFiles.isNotEmpty)
           SliverPadding(
             padding: const EdgeInsets.only(left: 16, right: 16, bottom: 100),
-            sliver: SliverList(
+            sliver: SliverGrid(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 0.70,
+              ),
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
                   final file = provider.videoFiles[index];
@@ -367,57 +380,71 @@ class LocalPlayerScreen extends StatelessWidget {
                   final fileStat = file.statSync();
                   final sizeMb = fileStat.size / (1024 * 1024);
 
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: GestureDetector(
-                      onTap: () => _playAll(context, provider.videoFiles, index),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                        decoration: BoxDecoration(
-                          color: AppTheme.cardBg,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppTheme.border),
-                        ),
-                        child: Row(
+                  return GestureDetector(
+                    onTap: () => _playAll(context, provider.videoFiles, index),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppTheme.cardBg,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppTheme.border),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Stack(
+                          fit: StackFit.expand,
                           children: [
+                            // Fallback Thumbnail visual
                             Container(
-                              width: 38,
-                              height: 38,
-                              decoration: BoxDecoration(
-                                color: AppTheme.secondaryNeon.withOpacity(0.1),
-                                shape: BoxShape.circle,
-                                border: Border.all(color: AppTheme.secondaryNeon.withOpacity(0.2)),
-                              ),
-                              child: const Icon(
-                                Icons.play_arrow_rounded,
-                                size: 24,
-                                color: AppTheme.secondaryNeon,
+                              color: isDark ? const Color(0xFF1E1A2E) : const Color(0xFFE5E2F0),
+                              child: Center(
+                                child: Icon(
+                                  Icons.video_library_outlined,
+                                  size: 40,
+                                  color: isDark ? Colors.white30 : Colors.black26,
+                                ),
                               ),
                             ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    name,
-                                    style: TextStyle(
-                                      color: AppTheme.textPrimary,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                            // Black overlay at the bottom for readability
+                            Positioned(
+                              bottom: 0,
+                              left: 0,
+                              right: 0,
+                              child: Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Colors.transparent,
+                                      Colors.black.withOpacity(0.85),
+                                    ],
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'Size: ${sizeMb.toStringAsFixed(1)} MB',
-                                    style: TextStyle(
-                                      color: AppTheme.textSecondary,
-                                      fontSize: 11,
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      name,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                  ),
-                                ],
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      '${sizeMb.toStringAsFixed(1)} MB',
+                                      style: TextStyle(
+                                        color: Colors.white.withOpacity(0.7),
+                                        fontSize: 9,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ],

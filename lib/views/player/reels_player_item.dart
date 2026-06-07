@@ -68,6 +68,13 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
   double _currentPositionMs = 0.0;
   double _durationMs = 1.0;
 
+  // Volume control states
+  double _volume = 1.0;
+  double _dragStartVolume = 1.0;
+  bool _isDraggingVolume = false;
+  Timer? _volumeOverlayTimer;
+  bool _showVolumeOverlay = false;
+
   @override
   void initState() {
     super.initState();
@@ -248,6 +255,7 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
   @override
   void dispose() {
     _seekTimer?.cancel();
+    _volumeOverlayTimer?.cancel();
     // Remove pending downloads-loaded listener if still registered
     try {
       Provider.of<DownloadProvider>(context, listen: false).removeListener(_onDownloadsLoaded);
@@ -447,7 +455,7 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
 
   Widget _buildHUDIconButton({
     required IconData icon,
-    required String label,
+    // required String label,
     required bool isActive,
     required Color activeGlowColor,
     required VoidCallback onTap,
@@ -456,42 +464,29 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
     final iconColor = isActive ? activeGlowColor : Colors.white70;
     return GestureDetector(
       onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: size + 12,
-            height: size + 12,
-            decoration: BoxDecoration(
-              color: Colors.black.withAlpha(90),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: isActive ? activeGlowColor.withAlpha(150) : Colors.white.withAlpha(30), 
-                width: 1.0,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: isActive ? activeGlowColor.withAlpha(80) : Colors.transparent,
-                  blurRadius: 6,
-                  spreadRadius: 0.5,
-                )
-              ],
-            ),
-            child: Center(
-              child: Icon(icon, color: iconColor, size: size),
-            ),
+      child: Container(
+        // width: size + 12,
+        // height: size + 12,
+        width: size + 20,
+        height: size + 20,
+        decoration: BoxDecoration(
+          color: Colors.black.withAlpha(90),
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: isActive ? activeGlowColor.withAlpha(150) : Colors.white.withAlpha(30), 
+            width: 1.0,
           ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 9,
-              fontWeight: FontWeight.w500,
-              letterSpacing: 0.1,
-            ),
-          ),
-        ],
+          boxShadow: [
+            BoxShadow(
+              color: isActive ? activeGlowColor.withAlpha(80) : Colors.transparent,
+              blurRadius: 6,
+              spreadRadius: 0.5,
+            )
+          ],
+        ),
+        child: Center(
+          child: Icon(icon, color: iconColor, size: size),
+        ),
       ),
     );
   }
@@ -529,6 +524,35 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
               onDoubleTap: _togglePlayPause,
               onLongPressStart: _handleLongPressStart,
               onLongPressEnd: _handleLongPressEnd,
+              onHorizontalDragStart: (details) {
+                final screenHeight = MediaQuery.of(context).size.height;
+                if (details.localPosition.dy < screenHeight / 2) {
+                  _isDraggingVolume = true;
+                  _dragStartVolume = _volume;
+                }
+              },
+              onHorizontalDragUpdate: (details) {
+                if (!_isDraggingVolume || _controller == null || !_initialized) return;
+                final screenWidth = MediaQuery.of(context).size.width;
+                final delta = details.primaryDelta ?? 0;
+                final change = delta / (screenWidth * 0.5); // swipe half screen width for full 0 to 1 range
+                setState(() {
+                  _volume = (_volume + change).clamp(0.0, 1.0);
+                  _controller!.setVolume(_volume);
+                  _showVolumeOverlay = true;
+                });
+                _volumeOverlayTimer?.cancel();
+                _volumeOverlayTimer = Timer(const Duration(milliseconds: 800), () {
+                  if (mounted) {
+                    setState(() {
+                      _showVolumeOverlay = false;
+                    });
+                  }
+                });
+              },
+              onHorizontalDragEnd: (details) {
+                _isDraggingVolume = false;
+              },
               child: Center(
                 child: AspectRatio(
                   aspectRatio: _controller!.value.aspectRatio,
@@ -566,6 +590,11 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
           if (_isSpeedPlaying)
             Center(
               child: _buildSeekIndicator(icon: Icons.play_arrow_outlined, label: '2X Speed >>'),
+            ),
+
+          if (_showVolumeOverlay)
+            Center(
+              child: _buildVolumeIndicator(),
             ),
 
           // 3. Double-tap Play/Pause Animation Overlay
@@ -638,24 +667,42 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
                           ),
                         );
                       },
-                      child: Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            '@${widget.gif.userName}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              shadows: [Shadow(color: Colors.black, blurRadius: 4)],
-                            ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '@${widget.gif.userName}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  shadows: [Shadow(color: Colors.black, blurRadius: 4)],
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              if (widget.gif.verified) ...[
+                                const Icon(Icons.verified, size: 14, color: AppTheme.accentNeon),
+                                const SizedBox(width: 6),
+                              ],
+                              SubscribeButton(creatorId: widget.gif.userName),
+                            ],
                           ),
-                          const SizedBox(width: 6),
-                          if (widget.gif.verified) ...[
-                            const Icon(Icons.verified, size: 14, color: AppTheme.accentNeon),
-                            const SizedBox(width: 6),
-                          ],
-                          SubscribeButton(creatorId: widget.gif.userName),
+                          const SizedBox(height: 6),
+                          Text(
+                            widget.gif.title,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w400,
+                              shadows: [Shadow(color: Colors.black, blurRadius: 3)],
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ],
                       ),
                     ),
@@ -717,7 +764,7 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
                     glowColor: AppTheme.primaryNeon,
                     // size: 26,
                     size: 16,
-                    label: '${widget.gif.likes}',
+                    // label: '${widget.gif.likes}',
                     onTap: () => libraryProvider.toggleFavorite(widget.gif),
                   ),
                   // const SizedBox(height: 16),
@@ -728,7 +775,7 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
                     glowColor: AppTheme.secondaryNeon,
                     // size: 26,
                     size: 16,
-                    label: 'Save',
+                    // label: 'Save',
                     onTap: _showPlaylistSelector,
                   ),
                   // const SizedBox(height: 16),
@@ -748,7 +795,7 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
                           painter: DownloadPainter(color: AppTheme.accentNeon),
                           glowColor: AppTheme.accentNeon,
                           size: 16,
-                          label: 'Saved',
+                          // label: 'Saved',
                           onTap: () {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Video is saved locally')),
@@ -783,7 +830,7 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
                               painter: DownloadPainter(color: Colors.white70),
                               glowColor: AppTheme.accentNeon,
                               size: 16,
-                              label: 'Get',
+                              // label: 'Get',
                               onTap: () => downloadProvider.startDownload(context, widget.gif),
                             );
                     },
@@ -796,7 +843,7 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
                     glowColor: Colors.white60,
                     // size: 26,
                     size: 16,
-                    label: 'Share',
+                    // label: 'Share',
                     onTap: () {
                       final shareUrl = widget.gif.urls.html ?? 'https://www.redgifs.com/watch/${widget.gif.id}';
                       Share.share(shareUrl);
@@ -811,7 +858,7 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
                         children: [
                           _buildHUDIconButton(
                             icon: Icons.queue_play_next,
-                            label: 'Queue',
+                            // label: 'Queue',
                             isActive: queueProvider.showQueueSidebar,
                             activeGlowColor: AppTheme.primaryNeon,
                             onTap: () => queueProvider.toggleQueueSidebar(),
@@ -819,7 +866,7 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
                           const SizedBox(height: 12),
                           _buildHUDIconButton(
                             icon: playbackSettings.shuffleEnabled ? Icons.shuffle : Icons.shuffle_outlined,
-                            label: 'Shuffle',
+                            // label: 'Shuffle',
                             isActive: playbackSettings.shuffleEnabled,
                             activeGlowColor: AppTheme.secondaryNeon,
                             onTap: () => playbackSettings.setShuffleEnabled(!playbackSettings.shuffleEnabled),
@@ -827,7 +874,7 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
                           const SizedBox(height: 12),
                           _buildHUDIconButton(
                             icon: playbackSettings.repeatSingle ? Icons.repeat_one : Icons.repeat,
-                            label: 'Repeat',
+                            // label: 'Repeat',
                             isActive: playbackSettings.repeatSingle,
                             activeGlowColor: AppTheme.primaryNeon,
                             onTap: () => playbackSettings.setRepeatSingle(!playbackSettings.repeatSingle),
@@ -835,7 +882,7 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
                           const SizedBox(height: 12),
                           _buildHUDIconButton(
                             icon: playbackSettings.autoplayNext ? Icons.play_arrow : Icons.pause,
-                            label: 'Autoplay',
+                            // label: 'Autoplay',
                             isActive: playbackSettings.autoplayNext,
                             activeGlowColor: AppTheme.accentNeon,
                             onTap: () => playbackSettings.setAutoplayNext(!playbackSettings.autoplayNext),
@@ -910,6 +957,40 @@ class _ReelsPlayerItemState extends State<ReelsPlayerItem> {
                 ],
               ),
             ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVolumeIndicator() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.black87,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.secondaryNeon.withAlpha(100), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.secondaryNeon.withAlpha(50),
+            blurRadius: 10,
+          )
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            _volume == 0
+                ? Icons.volume_off
+                : (_volume < 0.5 ? Icons.volume_down : Icons.volume_up),
+            color: AppTheme.secondaryNeon,
+            size: 28,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Volume: ${(_volume * 100).toStringAsFixed(0)}%',
+            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+          ),
         ],
       ),
     );

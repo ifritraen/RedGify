@@ -99,9 +99,8 @@ class DownloadProvider extends ChangeNotifier {
         }
         dir ??= await getApplicationDocumentsDirectory();
         
-        final filename = gif.userName.trim().isNotEmpty
-            ? '${gif.userName}_${gif.id}.mp4'
-            : 'rgify_${gif.id}.mp4';
+        // Use the newly added downloadFileName property
+        final filename = gif.downloadFileName;
         path = '${dir.path}/$filename';
         
         // Copy the file instantly
@@ -110,8 +109,7 @@ class DownloadProvider extends ChangeNotifier {
         final downloadUrl = gif.urls.hd.isNotEmpty ? gif.urls.hd : gif.urls.sd;
         path = await DownloadService().downloadVideo(
           downloadUrl,
-          gif.id,
-          creatorName: gif.userName,
+          gif.downloadFileName,
           onProgress: (progress) {
             _activeDownloads[gif.id] = progress;
             notifyListeners();

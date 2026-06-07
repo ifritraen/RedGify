@@ -4,14 +4,30 @@ import '../../providers/library_provider.dart';
 
 class SubscribeButton extends StatelessWidget {
   final String creatorId;
-  const SubscribeButton({Key? key, required this.creatorId}) : super(key: key);
+  final bool compact;
+
+  // const SubscribeButton({Key? key, required this.creatorId}) : super(key: key);
+  const SubscribeButton({
+    Key? key,
+    required this.creatorId,
+    this.compact = false,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final library = Provider.of<LibraryProvider>(context);
     final isSubscribed = library.isSubscribed(creatorId);
     final bgColor = isSubscribed ? const Color(0xFF43A047) : const Color(0xFFE53935);
-    final label = isSubscribed ? 'Subscribed' : 'Subscribe';
+    // final label = isSubscribed ? 'Subscribed' : 'Subscribe';
+    final label = compact
+        ? (isSubscribed ? 'Sub\'d' : 'Sub')
+        : (isSubscribed ? 'Subscribed' : 'Subscribe');
+
+    final verticalPadding = compact ? 2.0 : 4.0;
+    final horizontalPadding = compact ? 6.0 : 8.0;
+    final fontSize = compact ? 8.0 : 10.0;
+    final borderRadius = compact ? 8.0 : 12.0;
+
     return GestureDetector(
       onTap: () async {
         if (isSubscribed) {
@@ -22,14 +38,14 @@ class SubscribeButton extends StatelessWidget {
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: verticalPadding),
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(borderRadius),
         ),
         child: Text(
           label,
-          style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Colors.white, fontSize: fontSize, fontWeight: FontWeight.bold),
         ),
       ),
     );

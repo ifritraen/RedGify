@@ -92,4 +92,25 @@ class GifInfo {
       'verified': verified,
     };
   }
+
+  String get title {
+    if (tags.isNotEmpty) {
+      final tagsStr = tags.join(' ');
+      return '$tagsStr Porn GIF by $userName';
+    }
+    // Fallback if tags are empty
+    final capitalizedId = id.isEmpty ? '' : '${id[0].toUpperCase()}${id.substring(1)}';
+    return '$capitalizedId by $userName';
+  }
+
+  String get downloadFileName {
+    // Replace characters that are invalid in Windows/Android filesystems: \/:*?"<>|
+    final cleanTitle = title
+        .replaceAll(RegExp(r'[\\/:*?"<>|]'), '')
+        .replaceAll(' ', '_')
+        .replaceAll('__', '_');
+    // Truncate to avoid file path length limit issues (e.g. max 100 characters for title prefix)
+    final titlePrefix = cleanTitle.length > 100 ? cleanTitle.substring(0, 100) : cleanTitle;
+    return '${titlePrefix}_${id}.mp4';
+  }
 }

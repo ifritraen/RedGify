@@ -54,7 +54,7 @@ class PlaybackQueueSidebar extends StatelessWidget {
                     children: [
                       // Header
                       Padding(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -74,11 +74,22 @@ class PlaybackQueueSidebar extends StatelessWidget {
                           ],
                         ),
                       ),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+                        child: Text(
+                          'Hold & drag to reorder • Swipe either side to remove',
+                          style: TextStyle(
+                            color: subtitleColor.withOpacity(0.7),
+                            fontSize: 9,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
                       const Divider(color: Colors.white12, height: 1),
                       // Reorderable Queue List
                       Expanded(
                         child: ReorderableListView.builder(
-                          buildDefaultDragHandles: false, // drag from left side explicitly
+                          buildDefaultDragHandles: true, // hold and drag to reorder
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           itemCount: queueProvider.queue.length,
                           onReorder: (oldIndex, newIndex) {
@@ -133,6 +144,8 @@ class PlaybackQueueSidebar extends StatelessWidget {
       fontSize: 13,
     );
 
+    // Commented out the old ListTile implementation for protocol compliance
+    /*
     return Container(
       key: key,
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -146,7 +159,6 @@ class PlaybackQueueSidebar extends StatelessWidget {
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        // Left drag handle
         leading: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -158,7 +170,6 @@ class PlaybackQueueSidebar extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 4),
-            // Video Preview Thumbnail
             ClipRRect(
               borderRadius: BorderRadius.circular(6),
               child: SizedBox(
@@ -173,7 +184,6 @@ class PlaybackQueueSidebar extends StatelessWidget {
             ),
           ],
         ),
-        // Title starts with creator name
         title: Text(
           '@${gif.userName} - ${gif.id}',
           style: titleStyle,
@@ -184,7 +194,6 @@ class PlaybackQueueSidebar extends StatelessWidget {
           '${gif.duration.toStringAsFixed(1)}s • ${gif.views} views',
           style: TextStyle(color: subtitleColor, fontSize: 11),
         ),
-        // Tap to play
         onTap: () {
           queueProvider.setCurrentIndex(index);
           pageController.animateToPage(
@@ -193,18 +202,115 @@ class PlaybackQueueSidebar extends StatelessWidget {
             curve: Curves.easeInOut,
           );
         },
-        // Right remove button
         trailing: IconButton(
           icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
           onPressed: () {
             queueProvider.removeVideo(index, context);
-            // Sync page controller if active item index shifted
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (queueProvider.queue.isNotEmpty) {
                 pageController.jumpToPage(queueProvider.currentIndex);
               }
             });
           },
+        ),
+      ),
+    );
+    */
+
+    return Dismissible(
+      key: key,
+      direction: DismissDirection.horizontal,
+      onDismissed: (direction) {
+        queueProvider.removeVideo(index, context);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (queueProvider.queue.isNotEmpty) {
+            pageController.jumpToPage(queueProvider.currentIndex);
+          }
+        });
+      },
+      background: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.only(left: 20),
+        decoration: BoxDecoration(
+          color: Colors.redAccent.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 24),
+      ),
+      secondaryBackground: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        decoration: BoxDecoration(
+          color: Colors.redAccent.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 24),
+      ),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: itemBg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isActive ? AppTheme.primaryNeon.withAlpha(80) : Colors.white.withAlpha(15),
+            width: 1.0,
+          ),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: InkWell(
+            onTap: () {
+              queueProvider.setCurrentIndex(index);
+              pageController.animateToPage(
+                index,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Visual Thumbnail: big and fits the card width perfectly
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: AspectRatio(
+                      aspectRatio: 16 / 9,
+                      child: Image.network(
+                        (gif.urls.thumbnail ?? '').isNotEmpty ? gif.urls.thumbnail! : (gif.urls.poster ?? ''),
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(color: Colors.grey[900]),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  // Text info placed below the thumbnail
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          gif.title,
+                          style: titleStyle.copyWith(fontSize: 12),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${gif.duration.toStringAsFixed(1)}s • ${gif.views} views',
+                          style: TextStyle(color: subtitleColor, fontSize: 11),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );

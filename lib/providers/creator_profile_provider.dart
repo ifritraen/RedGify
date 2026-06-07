@@ -76,7 +76,15 @@ class CreatorProfileProvider with ChangeNotifier {
       }
 
       final data = await _apiClient.getUserProfile(username, bypassCache: bypassCache);
-      final rawUser = data['user'] as Map<String, dynamic>? ?? data;
+      // final rawUser = data['user'] as Map<String, dynamic>? ?? data;
+      final Map<String, dynamic> rawUser;
+      if (data.containsKey('user')) {
+        rawUser = data['user'] as Map<String, dynamic>;
+      } else if (data.containsKey('users') && data['users'] is List && (data['users'] as List).isNotEmpty) {
+        rawUser = data['users'][0] as Map<String, dynamic>;
+      } else {
+        rawUser = data;
+      }
       _userInfo = UserInfo.fromJson(rawUser);
       _isLoadingProfile = false;
       notifyListeners();

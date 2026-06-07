@@ -9,7 +9,7 @@ class DownloadService {
 
   /// Downloads a video from [url] and saves it locally in the user's Downloads directory.
   /// Returns the absolute path of the saved file.
-  Future<String> downloadVideo(String url, String id, {String? creatorName, Function(double)? onProgress}) async {
+  Future<String> downloadVideo(String url, String filename, {Function(double)? onProgress}) async {
     final client = http.Client();
     final request = http.Request('GET', Uri.parse(url));
     final response = await client.send(request);
@@ -46,9 +46,6 @@ class DownloadService {
     // dir ??= await getApplicationDocumentsDirectory();
     dir ??= await getApplicationDocumentsDirectory();
 
-    final filename = creatorName != null && creatorName.trim().isNotEmpty
-        ? '${creatorName}_$id.mp4'
-        : 'rgify_$id.mp4';
     final filePath = '${dir.path}/$filename';
     final file = File(filePath);
     final sink = file.openWrite();

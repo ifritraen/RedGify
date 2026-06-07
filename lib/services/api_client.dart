@@ -195,8 +195,10 @@ class ApiClient {
 
   // Fetch user profile metadata
   Future<Map<String, dynamic>> getUserProfile(String username, {bool bypassCache = false}) async {
+    final cleanUsername = username.trim().toLowerCase();
     // final cacheKey = 'user_profile_${username}';
-    final cacheKey = 'user_profile_$username';
+    // final cacheKey = 'user_profile_$username';
+    final cacheKey = 'user_profile_$cleanUsername';
     if (!bypassCache) {
       final cached = await _isarService.readCache(cacheKey, maxAge: const Duration(hours: 4));
       if (cached != null) {
@@ -204,7 +206,8 @@ class ApiClient {
       }
     }
 
-    final url = 'https://api.redgifs.com/v1/users/$username';
+    // final url = 'https://api.redgifs.com/v1/users/$username';
+    final url = 'https://api.redgifs.com/v1/users/$cleanUsername';
     final response = await get(url);
 
     if (response.statusCode == 200) {
@@ -217,7 +220,9 @@ class ApiClient {
 
   // Fetch GIFs uploaded by a specific user (creator feed)
   Future<Map<String, dynamic>> getUserGifs(String username, {String type = 'g', int limit = 20, int page = 1, bool bypassCache = false}) async {
-    final cacheKey = 'user_gifs_${username}_type_${type}_page_${page}_limit_$limit';
+    final cleanUsername = username.trim().toLowerCase();
+    // final cacheKey = 'user_gifs_${username}_type_${type}_page_${page}_limit_$limit';
+    final cacheKey = 'user_gifs_${cleanUsername}_type_${type}_page_${page}_limit_$limit';
     if (!bypassCache) {
       final cached = await _isarService.readCache(cacheKey, maxAge: const Duration(minutes: 10));
       if (cached != null) {
@@ -225,7 +230,8 @@ class ApiClient {
       }
     }
 
-    final url = '${ApiConstants.usersEndpoint}/$username/search?count=$limit&page=$page&type=$type';
+    // final url = '${ApiConstants.usersEndpoint}/$username/search?count=$limit&page=$page&type=$type';
+    final url = '${ApiConstants.usersEndpoint}/$cleanUsername/search?count=$limit&page=$page&type=$type';
     final response = await get(url);
 
     if (response.statusCode == 200) {
