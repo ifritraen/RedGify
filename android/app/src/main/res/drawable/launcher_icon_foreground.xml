@@ -1,0 +1,82 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/apk/res-auto"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+
+    <!-- Scaling Group to center and fit within the adaptive safe zone (72% scale) -->
+    <group
+        android:scaleX="0.72"
+        android:scaleY="0.72"
+        android:translateX="71.68"
+        android:translateY="71.68">
+
+        <!-- Cheerful Soft Sky Blue base card -->
+        <path
+            android:pathData="M 166,76 L 346,76 C 396,76 436,116 436,166 L 436,346 C 436,396 396,436 346,436 L 166,436 C 116,436 76,396 76,346 L 76,166 C 76,116 116,76 166,76 Z"
+            android:fillColor="#F4F8FD"
+            android:strokeColor="#E6EEF8"
+            android:strokeWidth="1.5" />
+
+        <!-- Blades Group (translated to center 256, 256 for rotations) -->
+        <group
+            android:translateX="256"
+            android:translateY="256">
+
+            <!-- Blade 1: Pink (0 deg) -->
+            <group android:rotation="0">
+                <path
+                    android:pathData="M 0,0 L 0,-130 C 40,-130 80,-90 80,-50 Z"
+                    android:fillColor="#CCFF5E8A" />
+            </group>
+
+            <!-- Blade 2: Yellow (60 deg) -->
+            <group android:rotation="60">
+                <path
+                    android:pathData="M 0,0 L 0,-130 C 40,-130 80,-90 80,-50 Z"
+                    android:fillColor="#CCFFE169" />
+            </group>
+
+            <!-- Blade 3: Blue (120 deg) -->
+            <group android:rotation="120">
+                <path
+                    android:pathData="M 0,0 L 0,-130 C 40,-130 80,-90 80,-50 Z"
+                    android:fillColor="#CC6BD6FF" />
+            </group>
+
+            <!-- Blade 4: Pink (180 deg) -->
+            <group android:rotation="180">
+                <path
+                    android:pathData="M 0,0 L 0,-130 C 40,-130 80,-90 80,-50 Z"
+                    android:fillColor="#CCFF5E8A" />
+            </group>
+
+            <!-- Blade 5: Yellow (240 deg) -->
+            <group android:rotation="240">
+                <path
+                    android:pathData="M 0,0 L 0,-130 C 40,-130 80,-90 80,-50 Z"
+                    android:fillColor="#CCFFE169" />
+            </group>
+
+            <!-- Blade 6: Blue (300 deg) -->
+            <group android:rotation="300">
+                <path
+                    android:pathData="M 0,0 L 0,-130 C 40,-130 80,-90 80,-50 Z"
+                    android:fillColor="#CC6BD6FF" />
+            </group>
+
+            <!-- Central Glassy Shutter/Lens Ring -->
+            <path
+                android:pathData="M 0,0 m -45,0 a 45,45 0 1,1 90,0 a 45,45 0 1,1 -90,0"
+                android:fillColor="#4DFFFFFF"
+                android:strokeColor="#E6FFFFFF"
+                android:strokeWidth="4" />
+
+            <!-- Central Play Button -->
+            <path
+                android:pathData="M -12,-18 L 18,0 L -12,18 Z"
+                android:fillColor="#FFFFFF" />
+        </group>
+    </group>
+</vector>
